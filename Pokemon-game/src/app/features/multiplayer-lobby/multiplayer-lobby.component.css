@@ -1,0 +1,129 @@
+.lobby-container {
+  min-height: 100vh;
+  padding: 30px 0 60px;
+}
+
+.lobby-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.lobby-badge {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  padding: 8px 18px;
+  border-radius: 20px;
+  background: var(--bg-dark-surface);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.lobby-grid {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 992px) {
+  .lobby-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.create-pane, .rooms-pane {
+  padding: 24px;
+  border-radius: 16px;
+  min-height: 400px;
+}
+
+.pane-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin-bottom: 16px;
+  border-left: 4px solid currentColor;
+  padding-left: 12px;
+}
+
+/* TERMINAL VIEW FOR EMPTY ROOMS */
+.empty-rooms-terminal {
+  background: rgba(3, 4, 8, 0.9);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  box-shadow: var(--glow-cyan);
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 200px;
+}
+
+.terminal-line {
+  color: var(--neon-cyan);
+  font-size: 0.65rem;
+  line-height: 1.6;
+  text-shadow: 0 0 4px rgba(0, 240, 255, 0.4);
+}
+
+.pulsing-cursor {
+  animation: pulse-cursor 1s infinite;
+}
+
+@keyframes pulse-cursor {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+/* ROOMS GRID */
+.rooms-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rooms-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 450px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.room-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  background: rgba(15, 17, 26, 0.8);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+
+.room-card:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(0, 240, 255, 0.2);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.05);
+}
+
+.room-title {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.room-host {
+  font-size: 0.7rem;
+  color: var(--color-text-dim);
+  margin-top: 4px;
+}

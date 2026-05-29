@@ -1,0 +1,305 @@
+<div class="deck-builder-container container animate-slide-up">
+  
+  <!-- HEADER ROW -->
+  <header class="deck-builder-header">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <button type="button" class="btn btn-magenta text-retro" (click)="goBack()">◀ Volver</button>
+      <h1 class="text-neon-cyan">🔧 DISEÑADOR DE MAZOS</h1>
+    </div>
+    <div class="deck-counter-badge" [class.valid-deck]="isDeckValid()">
+      Cartas Totales: {{ totalCards() }}
+      @if (isDeckValid()) {
+        <span style="color: var(--neon-green); font-weight: 800; margin-left: 8px;">✓ VÁLIDO</span>
+      } @else {
+        <span style="color: var(--neon-magenta); font-weight: 800; margin-left: 8px;">⚠️ INCOMPLETO (Mínimo 10)</span>
+      }
+    </div>
+  </header>
+
+  <!-- LOADING BAR -->
+  @if (deckService.loading() && deckService.decks().length === 0) {
+    <div style="text-align: center; color: var(--color-text-dim); padding: 50px;" class="glass-panel glowing-cyan">
+      Conectando con la red neural... Sincronizando mazos...
+    </div>
+  } @else {
+    
+    <div class="deck-builder-grid">
+      
+      <!-- LEFT COLUMN: PLAYER CATALOG -->
+      <section class="catalog-pane glass-panel glowing-cyan">
+        <h2 class="pane-title text-neon-cyan">🗂️ Mi Catálogo de Cartas</h2>
+        <p style="font-size: 0.75rem; color: var(--color-text-muted); margin-bottom: 16px;">
+          Haz clic en cualquier carta para agregarla al mazo seleccionado (Max 3 copias y dentro de tu límite de posesión).
+        </p>
+
+        <!-- Filters -->
+        <div class="deck-filters-bar">
+          <div class="search-wrapper-neon">
+            <input 
+              type="text" 
+              class="form-input search-input-neon" 
+              [ngModel]="searchQuery()" 
+              (ngModelChange)="searchQuery.set($event)"
+              placeholder="🔍 Buscar Pokémon, Entrenador o Energía por nombre...">
+          </div>
+
+          <div class="filter-controls-flex">
+            <!-- Type Filters -->
+            <div class="filter-row-labeled">
+              <span class="filter-label">TIPO:</span>
+              <div class="filter-group">
+                <button type="button" class="filter-chip" [class.active]="filterType() === 'all'" (click)="setType('all')">Todos</button>
+                <button type="button" class="filter-chip" [class.active]="filterType() === 'pokemon'" (click)="setType('pokemon')">👾 Pokémon</button>
+                <button type="button" class="filter-chip" [class.active]="filterType() === 'trainer'" (click)="setType('trainer')">💼 Entrenadores</button>
+                <button type="button" class="filter-chip" [class.active]="filterType() === 'energy'" (click)="setType('energy')">⚡ Energía</button>
+              </div>
+            </div>
+
+            <!-- Element Filters -->
+            <div class="filter-row-labeled">
+              <span class="filter-label">ELEMENTO:</span>
+              <div class="filter-group">
+                <button type="button" class="filter-chip" [class.active]="filterElement() === 'all'" (click)="setElement('all')">Todos</button>
+                <button type="button" class="filter-chip element-fire" [class.active]="filterElement() === 'fire'" (click)="setElement('fire')">🔥 Fuego</button>
+                <button type="button" class="filter-chip element-water" [class.active]="filterElement() === 'water'" (click)="setElement('water')">💧 Agua</button>
+                <button type="button" class="filter-chip element-electric" [class.active]="filterElement() === 'electric'" (click)="setElement('electric')">⚡ Eléctrico</button>
+                <button type="button" class="filter-chip element-grass" [class.active]="filterElement() === 'grass'" (click)="setElement('grass')">🌿 Planta</button>
+                <button type="button" class="filter-chip element-dark" [class.active]="filterElement() === 'dark'" (click)="setElement('dark')">🌑 Siniestro</button>
+                <button type="button" class="filter-chip element-colorless" [class.active]="filterElement() === 'colorless'" (click)="setElement('colorless')">⭐ Neutral</button>
+              </div>
+            </div>
+            
+            <!-- Rarity Filters -->
+            <div class="filter-row-labeled">
+              <span class="filter-label">RAREZA:</span>
+              <div class="filter-group">
+                <button type="button" class="filter-chip" [class.active]="filterRarity() === 'all'" (click)="setRarity('all')">Todas</button>
+                <button type="button" class="filter-chip" [class.active]="filterRarity() === 'common'" (click)="setRarity('common')">⚪ Común</button>
+                <button type="button" class="filter-chip" [class.active]="filterRarity() === 'uncommon'" (click)="setRarity('uncommon')">🟢 Poco Común</button>
+                <button type="button" class="filter-chip" [class.active]="filterRarity() === 'rare'" (click)="setRarity('rare')">🔵 Rara</button>
+                <button type="button" class="filter-chip" [class.active]="filterRarity() === 'ultra-rare'" (click)="setRarity('ultra-rare')">🟣 Ultra Rara</button>
+                <button type="button" class="filter-chip" [class.active]="filterRarity() === 'legendary'" (click)="setRarity('legendary')">🟡 Legendaria</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Dedicated Quick Energy Bank -->
+        <div class="quick-energy-bank glass-panel glowing-cyan">
+          <h3 class="energy-bank-title">⚡ BANCO DE ENERGÍAS RÁPIDAS</h3>
+          <p class="energy-bank-subtitle">Haz clic para agregar energías básicas directamente a tu mazo de combate</p>
+          
+          <div class="energy-pills-row">
+            @for (item of energyCollection(); track item.id) {
+              @if (item.card) {
+                <div class="quick-energy-card" (click)="addCard(item.card)" [class.grayed]="cardQuantitiesInDeck()[item.card.id] >= item.quantity">
+                  <span class="energy-card-emoji">{{ elementEmoji(item.card.element) }}</span>
+                  <div class="energy-card-details">
+                    <span class="energy-card-name">{{ item.card.name }}</span>
+                    <span class="energy-card-qty">Posees: {{ item.quantity }} | En mazo: {{ cardQuantitiesInDeck()[item.card.id] || 0 }} / 3</span>
+                  </div>
+                  <span class="add-energy-btn">✚</span>
+                </div>
+              }
+            }
+          </div>
+        </div>
+
+        <!-- Catalog grid -->
+        <div class="catalog-grid">
+          @if (filteredCollection().length === 0) {
+            <div style="grid-column: 1 / -1; text-align: center; color: var(--color-text-dim); padding: 40px;">
+              No posees cartas que coincidan con la búsqueda.
+            </div>
+          } @else {
+            @for (item of filteredCollection(); track item.id) {
+              @if (item.card) {
+                <div class="catalog-card-container">
+                  <app-card 
+                    [card]="item.card" 
+                    [quantity]="item.quantity"
+                    [grayed]="cardQuantitiesInDeck()[item.card.id] >= item.quantity"
+                    (cardClick)="addCard($event)">
+                  </app-card>
+                  @if (cardQuantitiesInDeck()[item.card.id]; as inDeckCount) {
+                    <div class="in-deck-overlay-badge text-retro">
+                      {{ inDeckCount }} en Mazo
+                    </div>
+                  }
+                </div>
+              }
+            }
+          }
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: SELECTED DECK MANAGEMENT -->
+      <section class="deck-pane glass-panel glowing-purple">
+        <h2 class="pane-title text-neon-purple">🔧 Mazo en Edición</h2>
+
+        <!-- Deck Selector Controls -->
+        <div class="deck-selector-row">
+          <div style="flex: 1;">
+            <label class="form-label" for="deck-select">Selecciona un Mazo</label>
+            <select 
+              id="deck-select"
+              class="form-input" 
+              style="width: 100%;" 
+              [ngModel]="selectedDeckId()" 
+              (ngModelChange)="selectDeck($event)">
+              @for (d of deckService.decks(); track d.id) {
+                <option [value]="d.id">
+                  {{ d.name }} {{ d.is_active ? '★ [ACTIVO]' : '' }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <div style="display: flex; gap: 8px; align-items: flex-end;">
+            <button type="button" class="btn btn-cyan" style="padding: 10px 14px;" (click)="openCreateModal()" title="Crear Nuevo Mazo">
+              ✚ Nuevo
+            </button>
+            @if (selectedDeck(); as deck) {
+              <button 
+                type="button" 
+                class="btn btn-magenta" 
+                style="padding: 10px 14px;" 
+                [disabled]="deck.is_active" 
+                (click)="openDeleteModal()" 
+                title="Eliminar Mazo">
+                🗑️
+              </button>
+            }
+          </div>
+        </div>
+
+        @if (selectedDeck(); as deck) {
+          <!-- Deck Options Actions -->
+          <div class="deck-actions-box">
+            @if (deck.is_active) {
+              <div class="active-badge text-retro">
+                ✓ ESTE ES TU MAZO ACTIVO DE COMBATE
+              </div>
+            } @else {
+              <button 
+                type="button" 
+                class="btn btn-primary" 
+                style="width: 100%;" 
+                [disabled]="!isDeckValid() || deckService.loading()"
+                (click)="markActive()">
+                ⚡ ESTABLECER COMO MAZO ACTIVO ⚡
+              </button>
+              @if (!isDeckValid()) {
+                <p style="font-size: 0.7rem; color: var(--color-text-dim); text-align: center; margin-top: 4px;">
+                  *Requiere al menos 10 cartas para poder ser activado para duelos.
+                </p>
+              }
+            }
+          </div>
+
+          <!-- Cards inside current deck list -->
+          <div class="deck-composition">
+            <div style="display: flex; justify-content: space-between; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px; margin-bottom: 12px; font-family: var(--font-heading);">
+              <span>Composición del Mazo</span>
+              <span class="text-neon-cyan">{{ totalCards() }} Cartas</span>
+            </div>
+
+            @if (selectedDeckCards().length === 0) {
+              <div style="text-align: center; color: var(--color-text-dim); padding: 40px; border: 1px dashed rgba(255,255,255,0.05); border-radius: 12px;">
+                Mazo vacío. Haz clic en las cartas del catálogo de la izquierda para agregarlas aquí.
+              </div>
+            } @else {
+              <div class="deck-cards-list">
+                @for (dc of selectedDeckCards(); track dc.id) {
+                  @if (dc.card) {
+                    <div class="deck-item-row rarity-strip-{{ dc.card.rarity }}">
+                      <!-- Element/Type icon -->
+                      <div class="deck-item-element-icon">
+                        @if (dc.card.type === 'energy') {
+                          ⚡
+                        } @else if (dc.card.type === 'trainer') {
+                          ✨
+                        } @else {
+                          🦁
+                        }
+                      </div>
+
+                      <div style="flex: 1; min-width: 0;">
+                        <div class="deck-item-name">{{ dc.card.name }}</div>
+                        <div class="deck-item-sub">{{ dc.card.type }} | {{ dc.card.rarity }}</div>
+                      </div>
+
+                      <!-- Control buttons for quantities -->
+                      <div class="deck-item-controls">
+                        <button type="button" class="control-btn minus" (click)="removeCard(dc.card)">-</button>
+                        <span class="qty-display">{{ dc.quantity }}</span>
+                        <button type="button" class="control-btn plus" (click)="addCard(dc.card)">+</button>
+                      </div>
+                    </div>
+                  }
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <div style="text-align: center; color: var(--color-text-muted); padding: 50px;">
+            Ningún mazo seleccionado. Por favor crea uno arriba.
+          </div>
+        }
+      </section>
+
+    </div>
+  }
+</div>
+
+<!-- CUSTOM CREATION MODAL overlay -->
+@if (showCreateModal()) {
+  <div class="custom-modal-backdrop" (click)="closeCreateModal()">
+    <div class="custom-modal-box glowing-cyan" (click)="$event.stopPropagation()">
+      <h3 class="custom-modal-title text-neon-cyan">➕ CREAR NUEVO MAZO</h3>
+      <p class="custom-modal-text">Asigna un nombre descriptivo a tu nueva base de datos de cartas:</p>
+      
+      <div class="custom-modal-input-wrapper">
+        <input 
+          type="text" 
+          class="custom-modal-input" 
+          [(ngModel)]="newDeckName"
+          name="newDeckNameInput"
+          (keyup.enter)="confirmCreateDeck()"
+          placeholder="Ej: Mazo Eléctrico Cyber..."
+          autofocus>
+      </div>
+
+      <div class="custom-modal-buttons">
+        <button type="button" class="btn btn-logout text-retro" style="border-color: rgba(255,255,255,0.15);" (click)="closeCreateModal()">
+          CANCELAR
+        </button>
+        <button type="button" class="btn btn-cyan text-retro" (click)="confirmCreateDeck()">
+          CREAR MAZO
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- CUSTOM DELETION MODAL overlay -->
+@if (showDeleteModal(); as visible) {
+  @if (selectedDeck(); as deck) {
+    <div class="custom-modal-backdrop" (click)="closeDeleteModal()">
+      <div class="custom-modal-box glowing-magenta" (click)="$event.stopPropagation()">
+        <h3 class="custom-modal-title text-neon-magenta">⚠️ ELIMINAR MAZO</h3>
+        <p class="custom-modal-text">
+          ¿Estás completamente seguro de que deseas purgar el mazo <strong style="color: var(--neon-magenta);">"{{ deck.name }}"</strong> de tu terminal de red? Esta acción es irreversible.
+        </p>
+
+        <div class="custom-modal-buttons">
+          <button type="button" class="btn btn-logout text-retro" style="border-color: rgba(255,255,255,0.15);" (click)="closeDeleteModal()">
+            CANCELAR
+          </button>
+          <button type="button" class="btn btn-magenta text-retro" (click)="confirmDeleteDeck()">
+            ELIMINAR
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+}

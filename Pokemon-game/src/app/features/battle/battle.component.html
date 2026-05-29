@@ -1,0 +1,526 @@
+<div class="battle-arena">
+
+  <!-- WAITING FOR OPPONENT MULTIPLAYER OVERLAY -->
+  @if (isMultiplayer() && roomStatus() === 'waiting') {
+    <div class="glass-panel glowing-purple" style="position: absolute; top:0; left:0; width:100vw; height:100vh; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(6,7,11,0.95);">
+      <h2 class="text-neon-purple animate-pulse-magenta" style="font-size:1.8rem; margin-bottom:12px;">📡 CANAL SATELITAL HABILITADO</h2>
+      <p style="color:var(--color-text-muted); font-size:0.9rem; margin-bottom:24px;" class="text-retro">> ESPERANDO CONEXIÓN DEL RIVAL EN LA RED DE SUPABASE...</p>
+      
+      <div class="spinner" style="width:50px; height:50px; border-width:4px; border-top-color:var(--neon-purple); margin-bottom:30px;"></div>
+      
+      <div class="glass-panel" style="padding:15px 30px; font-size:0.8rem; font-family:var(--font-heading);">
+        Identificador de Canal: <span class="text-neon-cyan">{{ hostProfile()?.username || 'Cargando...' }}</span>
+      </div>
+
+      <button type="button" class="btn btn-magenta text-retro" style="margin-top:40px;" (click)="openSurrenderModal()">
+        Desconectar Canal
+      </button>
+    </div>
+  }
+
+  <!-- TOP ZONE: OPPONENT TRAINER -->
+  <div class="opponent-section glass-panel">
+    <div class="trainer-header">
+      <div style="display: flex; flex-direction: column;">
+        <span class="trainer-name text-neon-magenta">👾 {{ opponentDisplayName() }}</span>
+        <span class="lp-label">Life Points (LP): {{ opponentLP() }}</span>
+      </div>
+      <!-- LP Progress Bar -->
+      <div class="lp-bar-container">
+        <div 
+          class="lp-bar-fill opponent" 
+          [style.width.%]="(opponentLP() / (isMultiplayer() ? 4000 : (difficulty === 'rookie' ? 3000 : difficulty === 'master' ? 5000 : 4000))) * 100">
+        </div>
+      </div>
+    </div>
+
+    <!-- CPU/Opponent Card Grid on Board -->
+    <div class="opponent-board-grid">
+      <!-- Opponent Bench slots -->
+      <div class="bench-slots">
+        @for (b of opponentBench(); track $index) {
+          <div class="bench-slot-box cpu">
+            @if (b) {
+              <div class="mini-card element-{{ b.card.element || 'colorless' }}">
+                <div class="mini-card-image mini">
+                  <img [src]="b.card.image_url || '/assets/cards/placeholder.png'" 
+                       class="mini-card-img"
+                       onerror="this.src='/assets/cards/placeholder.png'">
+                </div>
+                <div class="mini-card-info-box">
+                  <div class="mini-card-name">{{ b.card.name }}</div>
+                  <div class="mini-card-hp">❤ {{ b.currentHp }}/{{ b.card.hp }}</div>
+                  <div class="bench-energy-row">
+                    @for (slot of getEnergySlotsArray(b); track $index) {
+                      <span class="energy-orb-mini {{ slot.type }}" [class.empty]="!slot.filled"></span>
+                    }
+                  </div>
+                </div>
+              </div>
+            } @else {
+              <span class="slot-placeholder">Banca Oponente {{$index + 1}}</span>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Opponent Active slot -->
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div class="active-spot-box cpu" [class.occupied]="opponentActive() !== null">
+          @if (opponentActive(); as active) {
+            <div class="mini-card element-{{ active.card.element || 'colorless' }} active"
+                 [class.damage-shake]="opponentActiveDamaged()"
+                 [class.damage-flash]="opponentActiveDamaged()">
+              <div class="mini-card-image">
+                <img [src]="active.card.image_url || '/assets/cards/placeholder.png'" 
+                     class="mini-card-img"
+                     onerror="this.src='/assets/cards/placeholder.png'">
+              </div>
+              <div class="mini-card-info-box">
+                <div class="mini-card-name">{{ active.card.name }}</div>
+                <div class="mini-card-hp">❤ HP: {{ active.currentHp }} / {{ active.card.hp }}</div>
+                <div class="mini-card-atk">
+                  ⚔ ATK: {{ active.card.attack }}
+                  @if (opponentAttackBoost() > 0) {
+                    <span style="color:var(--neon-magenta)">+{{opponentAttackBoost()}}</span>
+                  }
+                </div>
+                <div class="attached-energy-container">
+                  <span class="energy-status-label">ENERGÍA:</span>
+                  <div class="energy-orbs-row">
+                    @for (slot of getEnergySlotsArray(active); track $index) {
+                      <span class="energy-orb {{ slot.type }}" [class.empty]="!slot.filled"></span>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div class="slot-placeholder">SIN POKÉMON ACTIVO</div>
+          }
+        </div>
+      </div>
+
+      <!-- Opponent Hand (displayed face down) -->
+      <div class="cpu-hand-back-panel">
+        <span class="form-label" style="font-size: 0.65rem;">Mano Oponente</span>
+        <div class="hand-card-backs">
+          @for (c of opponentHand(); track c.battleId) {
+            <div class="card-back-holo animate-float" style="margin-left: -20px; z-index: 10;"></div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER ZONE: GAME CONTROLS -->
+  <div class="center-controls-section" style="display: flex; gap: 12px; width: 100%; align-items: stretch; margin: 8px 0; min-height: 185px;">
+    <!-- Action Controls -->
+    <div class="arena-controls glass-panel" style="flex: 1.2; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+      @if (status() === 'active') {
+        <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+          <div class="phase-display text-retro" style="margin-bottom: 2px;">
+            TURNO DE: 
+            <span [class.text-neon-cyan]="isMyTurn()" [class.text-neon-magenta]="!isMyTurn()">
+              {{ isMyTurn() ? 'TU TURNO (JUGADOR)' : 'OPONENTE' }}
+            </span>
+          </div>
+
+          @if (isMyTurn()) {
+            <!-- CONSOLE ASSIST PANEL / GUÍA DE COMBATE -->
+            <div class="combat-assistant-tip text-retro" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255,255,255,0.06); padding: 8px 12px; border-radius: 6px; font-size: 0.52rem; line-height: 1.4; color: var(--color-text-muted); text-align: center; margin-bottom: 4px;">
+              @if (playerActive() === null) {
+                <span style="color: var(--neon-magenta); font-weight: 800; animation: blink 1.5s infinite;">⚠️ RED INDEFENSA:</span> Selecciona un Pokémon de tu mano y haz clic en <strong style="color:#fff">"Activo principal"</strong> para desplegar tu defensa.
+              } @else if (playerActive(); as active) {
+                @if (active.attachedEnergy.length < (active.card.cost ?? 0)) {
+                  <span style="color: var(--neon-yellow); font-weight: 800;">⚡ CARGAR ENERGÍA:</span> Tu activo requiere <strong style="color:var(--neon-yellow)">{{ active.card.cost }}</strong> Energías para atacar. ¡Selecciona una Energía en tu mano y cárgala a tu activo!
+                } @else if (canPlayerActiveAttack()) {
+                  <span style="color: var(--neon-green); font-weight: 800;">🔥 SISTEMA LISTO:</span> ¡Tu Pokémon Activo tiene energía suficiente! Presiona <strong style="color:var(--neon-cyan)">"EJECUTAR ATAQUE"</strong> para dañar al rival.
+                } @else {
+                  <span style="color: var(--neon-cyan); font-weight: 800;">🔌 PROCESAMIENTO COMPLETADO:</span> Ya has atacado en este turno. Haz clic en <strong style="color:var(--neon-magenta)">"PASAR TURNO"</strong> para ceder el control.
+                }
+              }
+            </div>
+
+            <div class="controls-row">
+              <button 
+                type="button"
+                class="btn btn-cyan text-retro glowing-cyan" 
+                style="flex: 2; padding: 14px 20px; font-size: 0.75rem;"
+                [disabled]="!canPlayerActiveAttack()"
+                (click)="attackEnemy()">
+                ⚔️ EJECUTAR ATAQUE ({{ playerActive()?.card?.attack || 0 }} Daño)
+              </button>
+              
+              <button 
+                type="button"
+                class="btn btn-magenta text-retro" 
+                style="flex: 1; padding: 14px 10px; font-size: 0.75rem;"
+                (click)="endTurn()">
+                PASAR TURNO 🔌
+              </button>
+              
+              <button 
+                type="button"
+                class="btn btn-cyan" 
+                style="padding: 14px 16px; margin-right: 4px;" 
+                (click)="showRulesModal.set(true)"
+                title="Ver Manual de Reglas">
+                📖
+              </button>
+
+              <button 
+                type="button"
+                class="btn btn-magenta" 
+                style="padding: 14px 16px;" 
+                (click)="openSurrenderModal()"
+                title="Rendirse / Salir">
+                🏳️
+              </button>
+            </div>
+          } @else {
+            <div style="text-align: center; color: var(--neon-magenta); padding: 10px;" class="text-retro">
+              <span class="spinner" style="border-top-color: var(--neon-magenta); margin-right: 8px;"></span>
+              OPONENTE EFECTUANDO PROCESAMIENTO...
+            </div>
+          }
+        </div>
+      } @else {
+        <div style="text-align: center; width: 100%;">
+          <h2 style="font-size: 1.3rem; margin-bottom: 12px;" [class.text-neon-cyan]="status() === 'victory'" [class.text-neon-magenta]="status() === 'defeat'">
+            {{ status() === 'victory' ? '🏆 ¡VICTORIA EN LA ARENA! 🏆' : '💀 DUELO CONCLUIDO (DERROTA) 💀' }}
+          </h2>
+          <button 
+            type="button"
+            class="btn btn-primary text-retro" 
+            style="padding: 16px 40px; font-size: 0.85rem;"
+            (click)="openSurrenderModal()">
+            Regresar al Terminal Principal
+          </button>
+        </div>
+      }
+    </div>
+
+    <!-- Battle Terminal Logs Panel -->
+    <div class="terminal-logs-panel glass-panel" style="flex: 1; display: flex; flex-direction: column; box-sizing: border-box; height: 185px;">
+      <div class="terminal-header">
+        <span style="font-family: var(--font-heading); font-size: 0.62rem; color: var(--neon-cyan); display: flex; align-items: center; gap: 6px; letter-spacing: 1px;">
+          <span class="pulsing-red-dot"></span>
+          CONSOLE LOGS // CENTRAL
+        </span>
+        <span class="text-retro" style="font-size: 0.42rem; color: var(--color-text-dim);">LIVE_DATA</span>
+      </div>
+      <div class="log-entries" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
+        @for (log of logs(); track log.id) {
+          <div class="log-row {{ log.type }}" style="font-family: var(--font-retro); font-size: 0.5rem; margin-bottom: 4px; display: flex; gap: 6px; line-height: 1.3;">
+            <span class="log-time" style="color: var(--color-text-dim); flex-shrink: 0;">[{{ log.timestamp | date:'HH:mm:ss' }}]</span>
+            <span class="log-text" style="word-break: break-word;">{{ log.message }}</span>
+          </div>
+        } @empty {
+          <div style="color: var(--color-text-dim); text-align: center; margin-top: 50px; font-family: var(--font-retro); font-size: 0.5rem;" class="text-retro">
+            > ESPERANDO PROTOCOLO DE TRANSMISIÓN DE DATOS...
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM ZONE: PLAYER TRAINER -->
+  <div class="player-section glass-panel">
+    
+    <!-- Player Active / Bench grid -->
+    <div class="player-board-grid">
+      <!-- Player Active slot -->
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div class="active-spot-box player" [class.occupied]="playerActive() !== null">
+          @if (playerActive(); as active) {
+            <div class="mini-card element-{{ active.card.element || 'colorless' }} active"
+                 [class.damage-shake]="playerActiveDamaged()"
+                 [class.damage-flash]="playerActiveDamaged()">
+              <div class="mini-card-image">
+                <img [src]="active.card.image_url || '/assets/cards/placeholder.png'" 
+                     class="mini-card-img"
+                     onerror="this.src='/assets/cards/placeholder.png'">
+              </div>
+              <div class="mini-card-info-box">
+                <div class="mini-card-name">{{ active.card.name }}</div>
+                <div class="mini-card-hp">❤ HP: {{ active.currentHp }} / {{ active.card.hp }}</div>
+                <div class="mini-card-atk">
+                  ⚔ ATK: {{ active.card.attack }}
+                  @if (playerAttackBoost() > 0) {
+                    <span style="color:var(--neon-green)">+{{playerAttackBoost()}}</span>
+                  }
+                </div>
+                <div class="attached-energy-container">
+                  <span class="energy-status-label">ENERGÍA:</span>
+                  <div class="energy-orbs-row">
+                    @for (slot of getEnergySlotsArray(active); track $index) {
+                      <span class="energy-orb {{ slot.type }}" [class.empty]="!slot.filled"></span>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div class="slot-placeholder">SIN POKÉMON ACTIVO</div>
+          }
+        </div>
+      </div>
+
+      <!-- Player Bench slots -->
+      <div class="bench-slots">
+        @for (b of playerBench(); track $index) {
+          <div class="bench-slot-box player"
+               [class.interactive-glow]="playerActive() === null && b !== null"
+               (click)="promoteBenchToActive($index)"
+               [title]="playerActive() === null && b !== null ? 'Haz clic para promover este Pokémon a ACTIVO' : ''">
+            @if (b) {
+              <div class="mini-card element-{{ b.card.element || 'colorless' }}">
+                <div class="mini-card-image mini">
+                  <img [src]="b.card.image_url || '/assets/cards/placeholder.png'" 
+                       class="mini-card-img"
+                       onerror="this.src='/assets/cards/placeholder.png'">
+                </div>
+                <div class="mini-card-info-box">
+                  <div class="mini-card-name">{{ b.card.name }}</div>
+                  <div class="mini-card-hp">❤ {{ b.currentHp }}/{{ b.card.hp }}</div>
+                  <div class="bench-energy-row">
+                    @for (slot of getEnergySlotsArray(b); track $index) {
+                      <span class="energy-orb-mini {{ slot.type }}" [class.empty]="!slot.filled"></span>
+                    }
+                  </div>
+                </div>
+              </div>
+            } @else {
+              <span class="slot-placeholder">Ranura Banca {{$index + 1}}</span>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Deck/Discard counter -->
+      <div class="deck-piles-display">
+        <div class="pile-box text-retro">
+          <span>BARAJA</span>
+          <span style="font-size: 1.1rem; color:var(--neon-cyan)">{{ playerDeck().length }}</span>
+        </div>
+        <div class="pile-box text-retro">
+          <span>DESCARTE</span>
+          <span style="font-size: 1.1rem; color:var(--neon-magenta)">{{ playerDiscard().length }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Card Menu overlay options -->
+    @if (selectedHandCardIndex() !== null; as selectedIndex) {
+      <div class="hand-actions-bar glass-panel animate-slide-up">
+        @if (playerHand()[selectedHandCardIndex()!]; as bc) {
+          <div style="font-family: var(--font-heading); font-size: 0.8rem; font-weight: 700; color: var(--neon-cyan);">
+            Acciones para {{ bc.card.name }} ({{ bc.card.type | uppercase }})
+          </div>
+          
+          <div class="actions-buttons-row">
+            <!-- POKEMON ACTIONS -->
+            @if (bc.card.type === 'pokemon') {
+              <button type="button" class="btn btn-cyan font-small" (click)="playAsActive()">Activo principal</button>
+              <button type="button" class="btn btn-purple font-small" (click)="playToBench(0)">Banca 1</button>
+              <button type="button" class="btn btn-purple font-small" (click)="playToBench(1)">Banca 2</button>
+              <button type="button" class="btn btn-purple font-small" (click)="playToBench(2)">Banca 3</button>
+            }
+
+            <!-- ENERGY ACTIONS -->
+            @if (bc.card.type === 'energy') {
+              <button type="button" class="btn btn-cyan font-small" (click)="attachEnergyToActive()">Cargar al Activo</button>
+              <button type="button" class="btn btn-purple font-small" (click)="attachEnergyToBench(0)">Cargar Banca 1</button>
+              <button type="button" class="btn btn-purple font-small" (click)="attachEnergyToBench(1)">Cargar Banca 2</button>
+              <button type="button" class="btn btn-purple font-small" (click)="attachEnergyToBench(2)">Cargar Banca 3</button>
+            }
+
+            <!-- TRAINER ACTIONS -->
+            @if (bc.card.type === 'trainer') {
+              <button type="button" class="btn btn-cyan font-small" style="width: 100%;" (click)="useTrainerCard()">
+                ⚡ ACTIVAR CÓDIGO (EFECTO)
+              </button>
+            }
+
+            <button type="button" class="btn btn-magenta font-small" (click)="selectedHandCardIndex.set(null)">
+              Cancelar
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- PLAYER INTERACTIVE HAND -->
+    <div class="player-hand-panel">
+      <span class="form-label" style="font-size: 0.7rem; color: var(--neon-cyan);">Tu mano interactiva ({{ playerHand().length }} cartas)</span>
+      <div class="player-hand-cards">
+        @for (c of playerHand(); track c.battleId) {
+          <div 
+            class="hand-card-wrapper" 
+            [class.selected]="selectedHandCardIndex() === $index"
+            (click)="selectHandCard($index)"
+            style="position: relative; display: flex; flex-direction: column; align-items: center;">
+            <div class="cyber-hand-card element-{{ c.card.element || 'colorless' }}">
+              <div class="hand-card-rarity strip-{{ c.card.rarity }}"></div>
+              <div class="hand-card-image">
+                <img [src]="c.card.image_url || '/assets/cards/placeholder.png'" 
+                     class="hand-card-img"
+                     onerror="this.src='/assets/cards/placeholder.png'">
+              </div>
+              <div class="hand-card-info">
+                <div class="card-name">{{ c.card.name }}</div>
+                @if (c.card.type === 'pokemon') {
+                  <div class="card-stats">❤ {{ c.currentHp }} | ⚔ {{ c.card.attack }}</div>
+                } @else if (c.card.type === 'trainer') {
+                  <div class="card-stats text-retro" style="font-size:0.45rem; color: var(--neon-purple); font-weight: bold;">CÓDIGO</div>
+                } @else {
+                  <div class="card-stats text-retro" style="font-size:0.45rem; color: var(--neon-yellow); font-weight: bold;">ENERGÍA</div>
+                }
+              </div>
+            </div>
+
+            <!-- Quick Action Single-Click Buttons for Ultra-Fast Play -->
+            <div class="quick-actions-overlay" style="display: flex; gap: 4px; width: 100%; justify-content: center; margin-top: 5px; z-index: 100;">
+              @if (c.card.type === 'pokemon') {
+                <button type="button" class="btn btn-cyan text-retro" style="font-size: 0.42rem; padding: 4px 6px; line-height: 1;" (click)="playAsActiveDirect($index); $event.stopPropagation();">
+                  ⚡ ACTIVO
+                </button>
+                <button type="button" class="btn btn-purple text-retro" style="font-size: 0.42rem; padding: 4px 6px; line-height: 1;" (click)="playToBenchDirect($index); $event.stopPropagation();">
+                  + BENCH
+                </button>
+              } @else if (c.card.type === 'energy') {
+                <button type="button" class="btn btn-cyan text-retro" style="font-size: 0.42rem; padding: 4px 10px; line-height: 1; border-color: var(--neon-yellow); color: var(--neon-yellow);" (click)="attachEnergyToActiveDirect($index); $event.stopPropagation();">
+                  ⚡ CARGAR
+                </button>
+              } @else if (c.card.type === 'trainer') {
+                <button type="button" class="btn btn-purple text-retro" style="font-size: 0.42rem; padding: 4px 10px; line-height: 1; border-color: var(--neon-purple); color: var(--neon-purple);" (click)="useTrainerCardDirect($index); $event.stopPropagation();">
+                  💾 ACTIVAR
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Trainer Hero status footer -->
+    <div class="trainer-header player">
+      <div style="display: flex; flex-direction: column;">
+        <span class="trainer-name text-neon-cyan">🛡️ ENTRENADOR: {{ playerDisplayName() }}</span>
+        <span class="lp-label">Mis Life Points (LP): {{ playerLP() }}</span>
+      </div>
+      <!-- LP Progress Bar -->
+      <div class="lp-bar-container">
+        <div class="lp-bar-fill player" [style.width.%]="(playerLP() / 4000) * 100"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CUSTOM SURRENDER CONFIRMATION MODAL -->
+@if (showSurrenderModal()) {
+  <div class="custom-modal-backdrop" (click)="closeSurrenderModal()">
+    <div class="custom-modal-box glowing-magenta" (click)="$event.stopPropagation()">
+      <h3 class="custom-modal-title text-neon-magenta">⚠️ DESCONECTAR DUELO</h3>
+      <p class="custom-modal-text">
+        ¿Estás completamente seguro de que deseas desconectarte y rendirte? Perderás el duelo actual de forma voluntaria.
+      </p>
+
+      <div class="custom-modal-buttons">
+        <button type="button" class="btn btn-logout text-retro" style="border-color: rgba(255,255,255,0.15);" (click)="closeSurrenderModal()">
+          VOLVER AL COMBATE
+        </button>
+        <button type="button" class="btn btn-magenta text-retro" (click)="confirmSurrender()">
+          RENDIRSE
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- CUSTOM RULES GUIDE MODAL -->
+@if (showRulesModal()) {
+  <div class="custom-modal-backdrop" (click)="showRulesModal.set(false)">
+    <div class="custom-modal-box glowing-cyan" style="max-width: 650px; text-align: left; padding: 28px; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;" (click)="$event.stopPropagation()">
+      <h3 class="custom-modal-title text-neon-cyan" style="margin-bottom: 20px; border-bottom: 1px solid rgba(0, 240, 255, 0.2); padding-bottom: 12px; font-family: var(--font-heading); font-size: 1.15rem; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; font-weight: 800;">
+        📖 MANUAL DEL SISTEMA (REGLAS DE DUELO)
+      </h3>
+      
+      <div class="rules-modal-content" style="max-height: 420px; overflow-y: auto; padding-right: 12px; display: flex; flex-direction: column; gap: 20px;">
+        
+        <!-- Sec 1 -->
+        <div class="rule-modal-card" style="border-left: 3px solid var(--neon-cyan); background: rgba(255, 255, 255, 0.01); padding: 16px 20px; border-radius: 0 8px 8px 0; border: 1px solid rgba(255, 255, 255, 0.02); border-left-width: 3px;">
+          <strong style="color: var(--neon-cyan); font-size: 0.85rem; font-family: var(--font-heading); display: block; margin-bottom: 8px; letter-spacing: 0.5px; font-weight: 800;">1. OBJETIVO DEL DUELO</strong>
+          <span style="font-size: 0.82rem; line-height: 1.6; color: var(--color-text-dim); display: block;">
+            Destruye la conexión de red de tu oponente reduciendo sus **Life Points (LP)** de 4000 a 0, o eliminando por completo todos sus Pokémon de combate.
+          </span>
+        </div>
+
+        <!-- Sec 2 -->
+        <div class="rule-modal-card" style="border-left: 3px solid var(--neon-yellow); background: rgba(255, 255, 255, 0.01); padding: 16px 20px; border-radius: 0 8px 8px 0; border: 1px solid rgba(255, 255, 255, 0.02); border-left-width: 3px;">
+          <strong style="color: var(--neon-yellow); font-size: 0.85rem; font-family: var(--font-heading); display: block; margin-bottom: 8px; letter-spacing: 0.5px; font-weight: 800;">2. FLUJO DEL TURNO</strong>
+          <span style="font-size: 0.82rem; line-height: 1.6; color: var(--color-text-dim); display: block;">
+            Cada turno consta de un ciclo de procesamiento ordenado guiado por la consola central:
+          </span>
+          <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 0.8rem; color: var(--color-text-muted); display: flex; flex-direction: column; gap: 6px; line-height: 1.5;">
+            <li><strong>Robo:</strong> Robas 1 carta al iniciar tu turno. Si no hay cartas en tu baraja, no robas pero continúas el combate de forma normal.</li>
+            <li><strong>Fase Principal:</strong> Despliega Pokémon activos (máx. 1), coloca Pokémon en la banca (máx. 3), carga energía (máx. 1 por turno), o activa códigos (scripts de entrenador) desde tu mano.</li>
+            <li><strong>Ataque:</strong> Ejecuta tu ofensiva si tu Pokémon activo tiene las energías suficientes cargadas. Realizar un ataque finaliza tu turno ofensivo.</li>
+            <li><strong>Pasar turno:</strong> Cede el control de la red para que tu rival inicie sus acciones.</li>
+          </ul>
+        </div>
+
+        <!-- Sec 3 -->
+        <div class="rule-modal-card" style="border-left: 3px solid var(--neon-magenta); background: rgba(255, 255, 255, 0.01); padding: 16px 20px; border-radius: 0 8px 8px 0; border: 1px solid rgba(255, 255, 255, 0.02); border-left-width: 3px;">
+          <strong style="color: var(--neon-magenta); font-size: 0.85rem; font-family: var(--font-heading); display: block; margin-bottom: 8px; letter-spacing: 0.5px; font-weight: 800;">3. CAMPO DE DUELO Y BANCA</strong>
+          <span style="font-size: 0.82rem; line-height: 1.6; color: var(--color-text-dim); display: block;">
+            • Puedes tener un máximo de <strong>1 Pokémon Activo</strong> y hasta <strong>3 en tu Banca</strong>.<br>
+            • Si tu Pokémon activo es destruido, <strong>debes promover uno de tu banca a activo</strong> haciendo clic sobre él en tu turno para defender tu terminal de ataques directos.
+          </span>
+        </div>
+
+        <!-- Sec 4 -->
+        <div class="rule-modal-card" style="border-left: 3px solid var(--neon-green); background: rgba(255, 255, 255, 0.01); padding: 16px 20px; border-radius: 0 8px 8px 0; border: 1px solid rgba(255, 255, 255, 0.02); border-left-width: 3px;">
+          <strong style="color: var(--neon-green); font-size: 0.85rem; font-family: var(--font-heading); display: block; margin-bottom: 8px; letter-spacing: 0.5px; font-weight: 800;">4. CÁLCULO DE DAÑO MITIGADO</strong>
+          <span style="font-size: 0.82rem; line-height: 1.6; color: var(--color-text-dim); display: block; margin-bottom: 8px;">
+            • <strong>Ataque Directo:</strong> Si el rival no tiene Pokémon activos, atacas directamente a su terminal restando tu ataque total de sus LP.<br>
+            • <strong>Ataque a Pokémon:</strong> El daño colisiona mitigándose según la fórmula:
+          </span>
+          <div style="background: rgba(0,0,0,0.35); padding: 8px 16px; border-radius: 6px; font-family: monospace; font-size: 0.85rem; font-weight: bold; color: var(--neon-green); text-align: center; margin-bottom: 8px; border: 1px solid rgba(0,255,100,0.15); letter-spacing: 1px;">
+            Daño = Ataque - (Defensa Rival / 4)
+          </div>
+          <span style="font-size: 0.74rem; color: var(--neon-yellow); display: block; font-family: var(--font-retro); font-weight: bold;">⚡ Todo ataque cargado tiene garantizado un daño mínimo de 10 puntos.</span>
+        </div>
+
+        <!-- Sec 5 -->
+        <div class="rule-modal-card" style="border-left: 3px solid var(--neon-purple); background: rgba(255, 255, 255, 0.01); padding: 16px 20px; border-radius: 0 8px 8px 0; border: 1px solid rgba(255, 255, 255, 0.02); border-left-width: 3px;">
+          <strong style="color: var(--neon-purple); font-size: 0.85rem; font-family: var(--font-heading); display: block; margin-bottom: 8px; letter-spacing: 0.5px; font-weight: 800;">5. CÓDIGOS DE ENTRENADOR</strong>
+          <span style="font-size: 0.82rem; line-height: 1.6; color: var(--color-text-dim); display: block;">
+            Activa inyecciones y scripts desde tu mano para efectos inmediatos:<br>
+            • <strong>Poción / Hiperpoción:</strong> Cura +50 / +100 HP a tu Pokémon activo.<br>
+            • <strong>Investigación:</strong> Sobrecarga tus buffers y roba 2 cartas de tu baraja.<br>
+            • <strong>Búsqueda:</strong> Escanea y roba 1 Energía de tu baraja a tu mano.<br>
+            • <strong>Espada del Caos:</strong> Potencia en +30 tu ataque durante este turno.
+          </span>
+        </div>
+
+        <!-- Sec 6 -->
+        <div class="rule-modal-card" style="border-left: 3px solid var(--neon-magenta); border-left-color: var(--neon-magenta); background: rgba(255, 0, 127, 0.03); padding: 16px 20px; border-radius: 0 8px 8px 0; border: 1px solid rgba(255, 0, 127, 0.15); border-left-width: 3px;">
+          <strong style="color: var(--neon-magenta); font-size: 0.85rem; font-family: var(--font-heading); display: block; margin-bottom: 8px; letter-spacing: 0.5px; font-weight: 800;">6. ELIMINACIÓN TOTAL (WIPEOUT)</strong>
+          <span style="font-size: 0.82rem; line-height: 1.6; color: var(--color-text-dim); display: block;">
+            ¡Condición de Victoria Estratégica! Si un duelista se queda **sin ningún Pokémon en juego** (activo y banca) **Y sin Pokémon disponibles** en su mano ni en su baraja para ser jugados, **es derrotado de inmediato** al no poseer recursos de combate para continuar la batalla.
+          </span>
+        </div>
+
+      </div>
+ 
+      <div class="custom-modal-buttons" style="margin-top: 24px;">
+        <button type="button" class="btn btn-cyan text-retro" style="width: 100%; padding: 16px; font-size: 0.72rem; letter-spacing: 1px;" (click)="showRulesModal.set(false)">
+          ENTENDIDO, VOLVER AL DUELO ⚡
+        </button>
+      </div>
+    </div>
+  </div>
+}

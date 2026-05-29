@@ -1,0 +1,91 @@
+<div class="lobby-container container animate-slide-up">
+  
+  <!-- HEADER -->
+  <header class="lobby-header">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <button type="button" class="btn btn-magenta text-retro" (click)="goBack()">◀ Volver</button>
+      <h1 class="text-neon-cyan">🌐 LOBBY MULTIJUGADOR ONLINE</h1>
+    </div>
+    <div class="lobby-badge">
+      Supabase Cloud Matchmaking: <span style="color: var(--neon-green); font-weight:800;">ON-GRID</span>
+    </div>
+  </header>
+
+  <div class="lobby-grid">
+    
+    <!-- LEFT PANEL: CREATE ROOM -->
+    <section class="create-pane glass-panel glowing-purple">
+      <h2 class="pane-title text-neon-purple">📡 Crear Canal de Combate</h2>
+      <p style="font-size: 0.75rem; color: var(--color-text-muted); margin-bottom: 20px;">
+        Abre una sala en la nube de Supabase para que otro jugador se conecte en tiempo real utilizando tu mazo activo.
+      </p>
+
+      <div class="form-group">
+        <label class="form-label" for="room-name">Identificador de Canal (Nombre Sala)</label>
+        <input 
+          type="text" 
+          id="room-name"
+          class="form-input" 
+          placeholder="Ej. Duelo del Siglo, Reto Ash..." 
+          [ngModel]="roomNameInput()"
+          (ngModelChange)="roomNameInput.set($event)"
+          [disabled]="loading()">
+      </div>
+
+      <button 
+        type="button" 
+        class="btn btn-primary" 
+        style="width: 100%; margin-top: 8px;"
+        [disabled]="loading() || !roomNameInput().trim()"
+        (click)="createRoom()">
+        @if (loading()) {
+          <span class="spinner"></span> Inicializando...
+        } @else {
+          ⚡ ACTIVAR CANAL DE COMBATE ⚡
+        }
+      </button>
+    </section>
+
+    <!-- RIGHT PANEL: ROOMS LIST -->
+    <section class="rooms-pane glass-panel glowing-cyan">
+      <h2 class="pane-title text-neon-cyan">⚔️ Canales de Duelo Activos</h2>
+      <p style="font-size: 0.75rem; color: var(--color-text-muted); margin-bottom: 20px;">
+        Elige un canal en espera para enlazarte y comenzar el combate online de manera inmediata.
+      </p>
+
+      <div class="rooms-list-container">
+        @if (rooms().length === 0) {
+          <div class="empty-rooms-terminal">
+            <span class="text-retro terminal-line">> ESCANEANDO TRANSMISIONES SATELITALES...</span>
+            <span class="text-retro terminal-line">> CERO SALAS DE DUELO ABIERTAS EN ESTE SECTOR.</span>
+            <span class="text-retro terminal-line pulsing-cursor">> █</span>
+          </div>
+        } @else {
+          <div class="rooms-grid">
+            @for (room of rooms(); track room.id) {
+              <div class="room-card glass-panel">
+                <div style="flex: 1; min-width: 0;">
+                  <div class="room-title">{{ room.name }}</div>
+                  <div class="room-host">
+                    Anfitrión: <span class="text-neon-cyan">{{ room.host_profile?.username || 'Entrenador_Anonimo' }}</span> 
+                    (Lvl {{ room.host_profile?.level || 1 }})
+                  </div>
+                </div>
+
+                <button 
+                  type="button" 
+                  class="btn btn-cyan text-retro font-small" 
+                  style="padding: 10px 16px;"
+                  [disabled]="loading()"
+                  (click)="joinRoom(room)">
+                  ⚡ ENLAZAR
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </section>
+
+  </div>
+</div>

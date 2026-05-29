@@ -1,0 +1,431 @@
+<div class="help-container container animate-slide-up">
+  <div class="page-header">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <button type="button" class="btn btn-magenta text-retro" (click)="goBack()">◀ Volver</button>
+      <h1 class="text-neon-cyan">📖 Panel de Control: Ayuda & SQLite Local</h1>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="tabs-row glass-panel">
+    <button 
+      type="button" 
+      class="tab-btn" 
+      [class.active]="activeTab() === 'rules'"
+      (click)="setTab('rules')">
+      🎮 Reglas y Manual de Juego
+    </button>
+    <button 
+      type="button" 
+      class="tab-btn" 
+      [class.active]="activeTab() === 'sqlite'"
+      (click)="setTab('sqlite')">
+      💾 Consola SQLite Local (Syllabus 8.2)
+    </button>
+  </div>
+
+  <!-- TAB 1: RULES GLOSSARY -->
+  @if (activeTab() === 'rules') {
+    <div class="rules-view animate-fade-in">
+      <div class="dashboard-grid rules-grid-layout">
+        
+        <!-- Left: Rule details -->
+        <div class="rules-main-column">
+          
+          <!-- Sec 1: Inicio de Partida -->
+          <div class="dashboard-card glass-panel glowing-cyan card-spacious">
+            <h2 class="card-title text-neon-cyan">
+              <span class="sec-number">5.1</span> Inicio de Partida & Configuración
+            </h2>
+            <p class="rule-paragraph mb-20 text-muted">
+              Sincroniza tus terminales y prepara tu baraja para adentrarte en la arena digital de Cyber Pokémon TCG.
+            </p>
+            
+            <!-- Grid of specs/chips -->
+            <div class="specs-grid">
+              <div class="spec-chip">
+                <span class="spec-icon">❤️</span>
+                <div class="spec-details">
+                  <span class="spec-title">LIFE POINTS INICIALES</span>
+                  <span class="spec-value text-neon-cyan">4000 LP</span>
+                </div>
+              </div>
+              <div class="spec-chip">
+                <span class="spec-icon">🃏</span>
+                <div class="spec-details">
+                  <span class="spec-title">TAMAÑO DE MAZO</span>
+                  <span class="spec-value text-neon-cyan">10 a 60 cartas</span>
+                </div>
+              </div>
+              <div class="spec-chip">
+                <span class="spec-icon">💾</span>
+                <div class="spec-details">
+                  <span class="spec-title">LÍMITE POR CARTA</span>
+                  <span class="spec-value text-neon-cyan">Máx. 3 copias</span>
+                </div>
+              </div>
+              <div class="spec-chip">
+                <span class="spec-icon">🎴</span>
+                <div class="spec-details">
+                  <span class="spec-title">MANO INICIAL</span>
+                  <span class="spec-value text-neon-cyan">5 cartas</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sec 2: Estructura de Turnos -->
+          <div class="dashboard-card glass-panel glowing-purple card-spacious">
+            <h2 class="card-title text-neon-purple">
+              <span class="sec-number text-neon-purple">5.2</span> Estructura de Turnos en Red
+            </h2>
+            <p class="rule-paragraph text-muted mb-25">
+              Cada turno se divide en cuatro fases lógicas de procesamiento secuencial:
+            </p>
+            
+            <!-- Beautiful Timeline Steps -->
+            <div class="timeline-container">
+              
+              <div class="timeline-step border-cyan">
+                <div class="step-badge bg-cyan">01</div>
+                <div class="step-content">
+                  <h3 class="step-title text-neon-cyan">Fase de Robo (Draw Phase)</h3>
+                  <p class="step-text">
+                    Se descarga de forma automática la carta superior de tu baraja digital a tu mano. 
+                    <span class="rule-highlight cyan">Sin penalización:</span> Si tu baraja se queda vacía, simplemente no robas más cartas y continúas jugando con las cartas de tu mano y campo.
+                  </p>
+                </div>
+              </div>
+
+              <div class="timeline-step border-purple">
+                <div class="step-badge bg-purple">02</div>
+                <div class="step-content">
+                  <h3 class="step-title text-neon-purple">Fase Principal (Main Phase)</h3>
+                  <p class="step-text">
+                    La fase de despliegue estratégico más importante. Aquí puedes realizar las siguientes acciones en cualquier orden:
+                  </p>
+                  <div class="main-phase-actions">
+                    <span class="action-tag">👾 Invocar Pokémon Activo (Máx. 1)</span>
+                    <span class="action-tag">🚪 Colocar en la Banca (Máx. 3)</span>
+                    <span class="action-tag">⚡ Cargar Energía (Máx. 1 por turno)</span>
+                    <span class="action-tag">💾 Activar Códigos Entrenador (Sin límites)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="timeline-step border-green">
+                <div class="step-badge bg-green">03</div>
+                <div class="step-content">
+                  <h3 class="step-title text-neon-green">Fase de Ataque (Battle Phase)</h3>
+                  <p class="step-text">
+                    Ejecutas el comando de combate con tu Pokémon activo hacia el rival. Requiere tener cargadas tantas energías como exija el costo de ataque. Una vez que realizas el ataque, se bloquea tu acción ofensiva y finaliza tu oportunidad de atacar.
+                  </p>
+                </div>
+              </div>
+
+              <div class="timeline-step border-magenta">
+                <div class="step-badge bg-magenta">04</div>
+                <div class="step-content">
+                  <h3 class="step-title text-neon-magenta">Fase Final (End Phase)</h3>
+                  <p class="step-text">
+                    Se reinician los modificadores temporales de daño del turno (como la inyección troyana de ataque) y cedes el control de red a tu oponente.
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Sec 3: Combate y Daño -->
+          <div class="dashboard-card glass-panel glowing-cyan card-spacious">
+            <h2 class="card-title text-neon-cyan">
+              <span class="sec-number">5.3 - 5.4</span> Invocación & Protocolos de Combate
+            </h2>
+            <p class="rule-paragraph text-muted mb-20">
+              Para entablar combate en la red, debes tener desplegado un Pokémon en tu ranura de <strong>ACTIVO</strong>. Si esta ranura está vacía, tu terminal queda indefenso y el rival podrá atacarte directamente.
+            </p>
+            
+            <!-- Interactive grid of combat rules -->
+            <div class="combat-grid">
+              
+              <div class="combat-card border-green bg-gradient-dark">
+                <div class="combat-header">
+                  <span class="combat-icon text-neon-green">⚔️</span>
+                  <h4 class="combat-title text-neon-green">ATAQUE A POKÉMON ACTIVO</h4>
+                </div>
+                <p class="combat-text">
+                  Si tu rival tiene un Pokémon activo, tu ataque colisiona contra él. El daño neto restado al HP del oponente se calcula con mitigación de defensa:
+                </p>
+                <div class="formula-badge">
+                  Daño = Ataque - (Defensa Rival / 4)
+                </div>
+                <span class="combat-footer text-neon-yellow">⚡ Daño mínimo garantizado de 10 LP sin importar la defensa.</span>
+              </div>
+
+              <div class="combat-card border-magenta bg-gradient-dark">
+                <div class="combat-header">
+                  <span class="combat-icon text-neon-magenta">💻</span>
+                  <h4 class="combat-title text-neon-magenta">ATAQUE DIRECTO A LA RED</h4>
+                </div>
+                <p class="combat-text">
+                  Si tu rival **no tiene** ningún Pokémon activo desplegado en su zona, tu ofensiva se dirige directamente a su núcleo de red:
+                </p>
+                <div class="formula-badge magenta">
+                  Daño Directo = Puntos de Ataque del Activo
+                </div>
+                <span class="combat-footer text-neon-magenta">💀 Se deduce directamente de los Life Points (LP) del rival.</span>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right: Cards and abilities -->
+        <div class="rules-sidebar-column">
+          
+          <!-- Special Abilities -->
+          <div class="dashboard-card glass-panel glowing-purple card-spacious">
+            <h2 class="card-title text-neon-purple">
+              <span class="sec-number text-neon-purple">5.5</span> Códigos de Entrenador
+            </h2>
+            <p class="rule-paragraph text-muted mb-15">
+              Los scripts y códigos de inyección en la red otorgan ventajas instantáneas críticas al activarse desde tu mano:
+            </p>
+            <div class="abilities-list">
+              <div class="ability-card">
+                <div class="ability-header">
+                  <span class="ability-title">💉 NANOBOTS CURATIVOS</span>
+                  <span class="ability-chip bg-cyan">Poción</span>
+                </div>
+                <p class="ability-desc">Restaura de forma inmediata <strong>+50 HP</strong> a tu Pokémon activo.</p>
+              </div>
+
+              <div class="ability-card">
+                <div class="ability-header">
+                  <span class="ability-title">💊 SOPORTE VITAL CRÍTICO</span>
+                  <span class="ability-chip bg-purple">Hiperpoción</span>
+                </div>
+                <p class="ability-desc">Repara daños masivos curando <strong>+100 HP</strong> a tu Pokémon activo.</p>
+              </div>
+
+              <div class="ability-card">
+                <div class="ability-header">
+                  <span class="ability-title">🌀 INTRUSIÓN DE DATOS</span>
+                  <span class="ability-chip bg-magenta">Investigación</span>
+                </div>
+                <p class="ability-desc">Sobrecarga tus protocolos y roba <strong>2 cartas adicionales</strong> de tu baraja.</p>
+              </div>
+
+              <div class="ability-card">
+                <div class="ability-header">
+                  <span class="ability-title">⚡ INYECCIÓN TROYANA</span>
+                  <span class="ability-chip bg-yellow">Espada Caos</span>
+                </div>
+                <p class="ability-desc">Aumenta en <strong>+30 ATK</strong> el daño de tu Pokémon activo este turno.</p>
+              </div>
+
+              <div class="ability-card">
+                <div class="ability-header">
+                  <span class="ability-title">🔌 ESCÁNER DE NÚCLEOS</span>
+                  <span class="ability-chip bg-green">Búsqueda</span>
+                </div>
+                <p class="ability-desc">Rastrea, localiza y extrae <strong>1 carta de Energía</strong> de tu baraja a tu mano.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Victory conditions -->
+          <div class="dashboard-card glass-panel glowing-magenta card-spacious border-magenta-glow">
+            <h2 class="card-title text-neon-magenta">
+              <span class="sec-number text-neon-magenta">5.6</span> Condiciones de Victoria
+            </h2>
+            <p class="rule-paragraph text-muted mb-15">
+              El duelo cibernético concluirá con tu victoria si logras cualquiera de los siguientes objetivos:
+            </p>
+            <div class="victory-objectives">
+              <div class="objective-item">
+                <span class="obj-num bg-green">01</span>
+                <span class="obj-text">Reducir los <strong>Life Points (LP)</strong> de tu rival de 4000 a 0.</span>
+              </div>
+              <div class="objective-item">
+                <span class="obj-num bg-purple">02</span>
+                <span class="obj-text">Lograr que el oponente se <strong>rinda</strong> voluntariamente o abandone el duelo en PVP.</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- TAB 2: SQLITE CONSOLE -->
+  @if (activeTab() === 'sqlite') {
+    <div class="sqlite-view animate-fade-in">
+      
+      <!-- Metrics row -->
+      <div class="metrics-row">
+        <div class="metric-card glass-panel">
+          <span class="metric-val">{{ tableStats()['local_cards'] }}</span>
+          <span class="metric-label">📁 local_cards</span>
+        </div>
+        <div class="metric-card glass-panel">
+          <span class="metric-val">{{ tableStats()['user_config'] }}</span>
+          <span class="metric-label">⚙️ user_config</span>
+        </div>
+        <div class="metric-card glass-panel">
+          <span class="metric-val">{{ tableStats()['local_matches'] }}</span>
+          <span class="metric-label">⚔️ local_matches</span>
+        </div>
+        <div class="metric-card glass-panel">
+          <span class="metric-val">{{ tableStats()['local_history'] }}</span>
+          <span class="metric-label">🕒 local_history</span>
+        </div>
+        <div class="metric-card glass-panel">
+          <span class="metric-val">{{ tableStats()['temp_deck'] }}</span>
+          <span class="metric-label">🧱 temp_deck</span>
+        </div>
+      </div>
+
+      <!-- Main SQL console section -->
+      <div class="console-grid">
+        
+        <!-- Left: Console terminal -->
+        <div class="terminal-card glass-panel">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">TERMINAL DE COMANDOS SQLITE LOCAL</span>
+          </div>
+
+          <div class="terminal-body">
+            <div class="prompt-line">
+              <span class="prompt-text">cyber-tcg-db:~$ sqlite3 local.db</span>
+            </div>
+            <div class="prompt-line">
+              <span class="prompt-text">sqlite> Enter query below to execute:</span>
+            </div>
+
+            <!-- SQL text input -->
+            <div class="sql-input-area">
+              <span class="terminal-cursor">></span>
+              <textarea 
+                class="terminal-textarea" 
+                rows="3" 
+                [ngModel]="sqlInput()" 
+                (ngModelChange)="sqlInput.set($event)"
+                placeholder="Escribe tu consulta SQL aquí... Ej: SELECT * FROM local_cards;"></textarea>
+            </div>
+
+            <!-- Action buttons -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+              <span style="font-size: 0.75rem; color: var(--neon-green);" *ngIf="executionTimeMs() > 0">
+                ⚡ Consulta resuelta en {{ executionTimeMs() }} ms
+              </span>
+              <span *ngIf="executionTimeMs() === 0"></span>
+              
+              <button 
+                type="button" 
+                class="btn btn-green text-retro" 
+                style="padding: 10px 24px;"
+                (click)="runSql()">
+                💻 RUN QUERY
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Templates & schemas -->
+        <div class="templates-card glass-panel">
+          <h3 class="panel-subtitle text-neon-cyan" style="margin-top: 0; font-size: 0.85rem;">📋 PLANTILLAS RÁPIDAS</h3>
+          <p style="font-size: 0.75rem; color: var(--color-text-dim); margin-bottom: 12px;">
+            Haz clic en cualquier plantilla para ejecutar la consulta SQL en tiempo real:
+          </p>
+
+          <div class="templates-list">
+            <button 
+              type="button" 
+              class="btn-template" 
+              (click)="selectTemplate('SELECT * FROM local_cards ORDER BY rarity ASC;')">
+              🔍 Consultar cartas descargadas (PokeAPI)
+            </button>
+            <button 
+              type="button" 
+              class="btn-template" 
+              (click)="selectTemplate('SELECT * FROM local_matches ORDER BY date DESC;')">
+              📊 Historial local de batallas CPU
+            </button>
+            <button 
+              type="button" 
+              class="btn-template" 
+              (click)="selectTemplate('SELECT * FROM user_config;')">
+              ⚙️ Ajustes locales de configuración
+            </button>
+            <button 
+              type="button" 
+              class="btn-template" 
+              (click)="selectTemplate('SELECT * FROM local_history ORDER BY timestamp DESC LIMIT 10;')">
+              🕒 Historial de diagnósticos local
+            </button>
+            <button 
+              type="button" 
+              class="btn-template" 
+              (click)="selectTemplate('SELECT * FROM temp_deck;')">
+              🧱 Borradores temporales de mazos
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RESULTS PANEL -->
+      <div class="results-panel glass-panel" style="margin-top: 25px;">
+        <h3 class="panel-subtitle text-neon-green" style="margin-top: 0; border-bottom: 1px solid rgba(0,255,100,0.15); padding-bottom: 8px;">
+          🟢 RESULTADOS DE LA CONSULTA
+        </h3>
+
+        <!-- Error box -->
+        <div class="error-box" *ngIf="queryErrorMessage()">
+          <span style="font-weight: 800;">[ERR SQLite Error]</span> {{ queryErrorMessage() }}
+        </div>
+
+        <!-- Success affected rows -->
+        <div class="success-affected" *ngIf="queryRowsAffected() !== null">
+          <span>✓ Comando SQL ejecutado correctamente. Filas afectadas: {{ queryRowsAffected() }}</span>
+        </div>
+
+        <!-- Grid of rows -->
+        <div *ngIf="!queryErrorMessage() && queryResultRows().length > 0" class="table-container">
+          <table class="sqlite-results-table">
+            <thead>
+              <tr>
+                <th *ngFor="let head of queryResultHeaders()">{{ head }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of queryResultRows()">
+                <td *ngFor="let head of queryResultHeaders()">
+                  <!-- Special image rendering -->
+                  <ng-container *ngIf="head === 'image_url'">
+                    <img [src]="row[head]" style="height: 35px; border-radius: 4px; border: 1px solid var(--color-border);" onerror="this.src='/assets/cards/placeholder.png'">
+                  </ng-container>
+                  <ng-container *ngIf="head !== 'image_url'">
+                    {{ row[head] }}
+                  </ng-container>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div *ngIf="!queryErrorMessage() && queryResultRows().length === 0 && queryRowsAffected() === null" class="empty-results">
+          Copia o haz clic en una plantilla rápida y ejecuta la consulta para visualizar los registros de la base de datos SQL.
+        </div>
+      </div>
+
+    </div>
+  }
+</div>

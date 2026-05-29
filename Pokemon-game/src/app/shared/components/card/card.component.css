@@ -1,0 +1,418 @@
+.card-wrapper {
+  perspective: 1000px;
+  display: inline-block;
+  cursor: pointer;
+  position: relative;
+}
+
+.card-inner {
+  width: 270px;
+  height: 390px;
+  border-radius: 16px;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-dark-panel);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  transform-style: preserve-3d;
+  user-select: none;
+}
+
+/* Holographic shimmer overlay */
+.card-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.06) 50%,
+    transparent 60%
+  );
+  background-size: 200% 200%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.card-wrapper:hover .card-inner::before {
+  opacity: 1;
+  animation: holo-shimmer 1.5s infinite linear;
+}
+
+@keyframes holo-shimmer {
+  0%   { background-position: 200% 0%; }
+  100% { background-position: -200% 0%; }
+}
+
+/* Element-colored glows */
+.card-inner.fire   { border-color: rgba(255, 69, 0, 0.4); box-shadow: 0 0 15px rgba(255, 69, 0, 0.15); }
+.card-inner.water  { border-color: rgba(0, 240, 255, 0.4); box-shadow: 0 0 15px rgba(0, 240, 255, 0.15); }
+.card-inner.electric { border-color: rgba(255, 215, 0, 0.4); box-shadow: 0 0 15px rgba(255, 215, 0, 0.15); }
+.card-inner.grass  { border-color: rgba(50, 205, 50, 0.4); box-shadow: 0 0 15px rgba(50, 205, 50, 0.15); }
+.card-inner.dark   { border-color: rgba(157, 0, 255, 0.45); box-shadow: 0 0 15px rgba(157, 0, 255, 0.18); }
+.card-inner.colorless { border-color: rgba(180, 180, 180, 0.3); }
+
+/* On hover — element-specific glow intensifies */
+.card-inner.fire:hover   { box-shadow: 0 0 25px rgba(255, 69, 0, 0.5), 0 8px 20px rgba(0,0,0,0.5); }
+.card-inner.water:hover  { box-shadow: 0 0 25px rgba(0, 240, 255, 0.5), 0 8px 20px rgba(0,0,0,0.5); }
+.card-inner.electric:hover { box-shadow: 0 0 25px rgba(255, 215, 0, 0.5), 0 8px 20px rgba(0,0,0,0.5); }
+.card-inner.grass:hover  { box-shadow: 0 0 25px rgba(50, 205, 50, 0.5), 0 8px 20px rgba(0,0,0,0.5); }
+.card-inner.dark:hover   { box-shadow: 0 0 25px rgba(157, 0, 255, 0.6), 0 8px 20px rgba(0,0,0,0.5); }
+
+/* Card header section */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px 8px;
+  flex-shrink: 0;
+}
+
+.card-name {
+  font-family: var(--font-heading);
+  font-size: 1.12rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 170px;
+}
+
+.hp-label {
+  font-family: var(--font-heading);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--color-text-muted);
+  letter-spacing: 0.5px;
+}
+
+.hp-value {
+  font-size: 1.15rem;
+  color: var(--neon-magenta);
+  font-weight: 800;
+  text-shadow: var(--glow-magenta);
+}
+
+/* Card illustration box */
+.card-image-box {
+  width: calc(100% - 24px);
+  height: 155px;
+  margin: 0 auto;
+  background: #080a10;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.card-illustration {
+  width: auto;
+  height: 90%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
+  transition: transform 0.3s ease;
+}
+
+.card-wrapper:hover .card-illustration {
+  transform: scale(1.08);
+}
+
+/* Pills row on card illustration */
+.pills-row {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 10px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.pill {
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.pill-element.fire {
+  color: var(--neon-orange);
+  border-color: rgba(255, 95, 0, 0.4);
+  background: rgba(255, 95, 0, 0.12);
+}
+
+.pill-element.water {
+  color: #00f0ff;
+  border-color: rgba(0, 240, 255, 0.4);
+  background: rgba(0, 240, 255, 0.12);
+}
+
+.pill-element.electric {
+  color: var(--neon-yellow);
+  border-color: rgba(255, 234, 0, 0.4);
+  background: rgba(255, 234, 0, 0.12);
+}
+
+.pill-element.grass {
+  color: var(--neon-green);
+  border-color: rgba(57, 255, 20, 0.4);
+  background: rgba(57, 255, 20, 0.12);
+}
+
+.pill-element.dark {
+  color: var(--neon-purple);
+  border-color: rgba(157, 0, 255, 0.45);
+  background: rgba(157, 0, 255, 0.12);
+}
+
+.pill-element.colorless {
+  color: #cbd5e1;
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pill-rarity {
+  color: #cbd5e1;
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pill-rarity.common {
+  color: #94a3b8;
+  border-color: rgba(148, 163, 184, 0.3);
+  background: rgba(148, 163, 184, 0.06);
+}
+
+.pill-rarity.uncommon {
+  color: var(--neon-green);
+  border-color: rgba(57, 255, 20, 0.3);
+  background: rgba(57, 255, 20, 0.06);
+}
+
+.pill-rarity.rare {
+  color: var(--neon-cyan);
+  border-color: rgba(0, 240, 255, 0.3);
+  background: rgba(0, 240, 255, 0.06);
+}
+
+.pill-rarity.ultra-rare, .pill-rarity.epic {
+  color: var(--neon-magenta);
+  border-color: rgba(255, 0, 127, 0.3);
+  background: rgba(255, 0, 127, 0.06);
+}
+
+.pill-rarity.legendary {
+  color: var(--neon-yellow);
+  border-color: rgba(255, 234, 0, 0.3);
+  background: rgba(255, 234, 0, 0.06);
+}
+
+/* Card body layout */
+.card-body {
+  padding: 10px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1;
+  min-height: 0;
+  justify-content: space-between;
+}
+
+/* Progress bar sections */
+.stats-bars-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stat-bar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.stat-label {
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--color-text-muted);
+  width: 60px;
+  letter-spacing: 0.5px;
+}
+
+.progress-track {
+  flex-grow: 1;
+  height: 8px;
+  background: #090b11;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease-out;
+}
+
+.attack-fill {
+  background: linear-gradient(90deg, #ff5f00, #ff007f);
+  box-shadow: 0 0 6px rgba(255, 95, 0, 0.3);
+}
+
+.defense-fill {
+  background: linear-gradient(90deg, #0099ff, #00f0ff);
+  box-shadow: 0 0 6px rgba(0, 240, 255, 0.3);
+}
+
+.stat-value {
+  font-family: var(--font-heading);
+  font-size: 0.78rem;
+  font-weight: 800;
+  min-width: 20px;
+  text-align: right;
+}
+
+.attack-value { color: #ff5f00; }
+.defense-value { color: #00f0ff; }
+
+/* Ability detailed box */
+.ability-box {
+  background: #080a11;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ability-title {
+  font-family: var(--font-heading);
+  font-size: 0.58rem;
+  font-weight: 800;
+  color: var(--neon-magenta);
+  text-shadow: var(--glow-magenta);
+  letter-spacing: 0.5px;
+}
+
+.ability-name-row {
+  font-family: var(--font-heading);
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.ability-desc {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  line-height: 1.35;
+}
+
+/* Flavor text lore */
+.lore-text-box {
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  padding-top: 6px;
+}
+
+.lore-text {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.62rem;
+  color: var(--color-text-dim);
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Energy illustration special layout */
+.energy-illustration-box {
+  width: calc(100% - 24px);
+  height: 185px;
+  margin: 0 auto;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.04) 0%, transparent 80%);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 15px;
+}
+
+.energy-icon-large {
+  font-size: 5rem;
+  filter: drop-shadow(0 0 15px rgba(255, 234, 0, 0.25));
+}
+
+/* Rarity strip bottom details */
+.card-rarity-strip {
+  height: 3px;
+  width: 100%;
+  border-radius: 0 0 16px 16px;
+}
+
+.rarity-strip-common    { background: rgba(255,255,255,0.15); }
+.rarity-strip-uncommon  { background: var(--neon-green); box-shadow: 0 0 4px var(--neon-green); }
+.rarity-strip-rare      { background: var(--neon-cyan); box-shadow: 0 0 4px var(--neon-cyan); }
+.rarity-strip-ultra-rare { background: var(--neon-magenta); box-shadow: 0 0 6px var(--neon-magenta); }
+.rarity-strip-legendary {
+  background: linear-gradient(90deg, var(--neon-yellow), var(--neon-magenta), var(--neon-cyan));
+  box-shadow: 0 0 8px var(--neon-yellow);
+  animation: legendary-pulse 2s infinite alternate;
+}
+
+@keyframes legendary-pulse {
+  from { opacity: 0.8; }
+  to   { opacity: 1; filter: brightness(1.3); }
+}
+
+/* Quantity badge */
+.qty-badge {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: var(--color-text-main);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
+  z-index: 5;
+}
+
+/* Selected and disabled states */
+.card-inner.selected {
+  outline: 2px solid var(--neon-cyan);
+  outline-offset: 2px;
+  box-shadow: 0 0 16px rgba(0,240,255,0.5);
+}
+
+.card-inner.grayed {
+  opacity: 0.4;
+  pointer-events: none;
+}

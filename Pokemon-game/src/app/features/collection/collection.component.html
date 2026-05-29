@@ -1,0 +1,155 @@
+<div class="collection-container container animate-slide-up">
+  <div class="page-header">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <button type="button" class="btn btn-magenta text-retro" (click)="goBack()">◀ Volver</button>
+      <h1 class="text-neon-cyan">🗂️ Mi Colección</h1>
+    </div>
+    <div class="card-count-badge">
+      Cartas en Red: {{ cardService.collection().length }}
+    </div>
+  </div>
+
+  <!-- PokeAPI Scanner Bar -->
+  <div class="filter-bar glass-panel glowing-purple animate-pulse-cyan" style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; border-color: rgba(157, 0, 255, 0.25);">
+    <div style="font-family: var(--font-heading); font-size: 0.85rem; font-weight: 800; color: var(--neon-purple); display: flex; align-items: center; gap: 8px;">
+      🛰️ ESCÁNER POKEAPI:
+    </div>
+    <div style="flex: 1; min-width: 200px;">
+      <input 
+        type="text" 
+        class="form-input" 
+        style="width: 100%; border-color: rgba(157, 0, 255, 0.2);"
+        placeholder="Ej. Mewtwo, Bulbasaur, o ID Nacional (1 a 1010)..." 
+        [ngModel]="pokeQuery()" 
+        (ngModelChange)="pokeQuery.set($event)"
+        [disabled]="importing()">
+    </div>
+    <button 
+      type="button" 
+      class="btn btn-purple text-retro" 
+      style="padding: 10px 20px; font-size: 0.75rem;" 
+      (click)="importPokemon()"
+      [disabled]="importing() || !pokeQuery().trim()">
+      @if (importing()) {
+        <span class="spinner" style="border-top-color: var(--neon-purple);"></span>
+      } @else {
+        📡 Descargar Carta
+      }
+    </button>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar glass-panel glowing-cyan">
+    <div class="filter-search">
+      <input 
+        type="text" 
+        class="form-input" 
+        style="width: 100%;"
+        placeholder="Buscar Pokémon, Entrenador o Energía..." 
+        [ngModel]="searchQuery()" 
+        (ngModelChange)="searchQuery.set($event)">
+    </div>
+
+    <!-- Type Filters -->
+    <div class="filter-group">
+      <button 
+        type="button"
+        class="filter-chip" 
+        [class.active]="filterType() === 'all'" 
+        (click)="setType('all')">
+        Todos
+      </button>
+      <button 
+        type="button"
+        class="filter-chip" 
+        [class.active]="filterType() === 'pokemon'" 
+        (click)="setType('pokemon')">
+        Pokémon
+      </button>
+      <button 
+        type="button"
+        class="filter-chip" 
+        [class.active]="filterType() === 'trainer'" 
+        (click)="setType('trainer')">
+        Entrenadores
+      </button>
+      <button 
+        type="button"
+        class="filter-chip" 
+        [class.active]="filterType() === 'energy'" 
+        (click)="setType('energy')">
+        Energía
+      </button>
+    </div>
+
+    <!-- Rarity Filters -->
+    <div class="filter-group">
+      <button 
+        type="button"
+        class="filter-chip" 
+        [class.active]="filterRarity() === 'all'" 
+        (click)="setRarity('all')">
+        Cualquier Rareza
+      </button>
+      <button 
+        type="button"
+        class="filter-chip" 
+        [class.active]="filterRarity() === 'common'" 
+        (click)="setRarity('common')">
+        Común
+      </button>
+      <button 
+        type="button"
+        class="filter-chip" 
+        [class.active]="filterRarity() === 'uncommon'" 
+        (click)="setRarity('uncommon')">
+        Poco Común
+      </button>
+      <button 
+        type="button"
+        class="filter-chip" 
+        [class.active]="filterRarity() === 'rare'" 
+        (click)="setRarity('rare')">
+        Rara
+      </button>
+      <button 
+        type="button"
+        class="filter-chip" 
+        [class.active]="filterRarity() === 'ultra-rare'" 
+        (click)="setRarity('ultra-rare')">
+        Ultra Rara
+      </button>
+      <button 
+        type="button"
+        class="filter-chip" 
+        [class.active]="filterRarity() === 'legendary'" 
+        (click)="setRarity('legendary')">
+        Legendaria
+      </button>
+    </div>
+  </div>
+
+  <!-- Cards Grid -->
+  @if (cardService.loading() && filteredCollection().length === 0) {
+    <div style="text-align: center; color: var(--color-text-dim); padding: 40px;" class="glass-panel">
+      Sincronizando base de datos de colección...
+    </div>
+  } @else if (filteredCollection().length === 0) {
+    <div class="empty-state glass-panel">
+      <h2>Sin registros en el escaneo</h2>
+      <p>No se encontraron cartas que coincidan con los filtros activos.</p>
+    </div>
+  } @else {
+    <div class="cards-grid">
+      @for (item of filteredCollection(); track item.id) {
+        @if (item.card) {
+          <app-card 
+            [card]="item.card" 
+            [quantity]="item.quantity"
+            (cardClick)="onCardClick(item)">
+          </app-card>
+        }
+      }
+    </div>
+  }
+</div>

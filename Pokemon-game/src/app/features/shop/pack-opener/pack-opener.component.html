@@ -1,0 +1,96 @@
+<div class="pack-opener-overlay animate-fade-in" (click)="state() === 'revealed' ? close() : null">
+  <button *ngIf="state() === 'unopened' || state() === 'revealed'" 
+          type="button" 
+          class="close-modal-btn" 
+          (click)="close()">
+    &times;
+  </button>
+
+  <div class="opener-container" (click)="$event.stopPropagation()">
+    
+    <!-- Fase 1: Sobre cerrado -->
+    <div *ngIf="state() === 'unopened'" class="unopened-pack-container animate-float">
+      <div class="booster-pack cyber-glow" (click)="openPack()">
+        <div class="booster-art">
+          <span class="pack-title">CYBER TCG</span>
+          <span class="pack-subtitle">Neo Genesis</span>
+          <div class="pack-cost">
+             {{ isOpening() ? 'CONECTANDO...' : 'ABRIR SOBRE (300 🪙)' }}
+          </div>
+        </div>
+      </div>
+      <p class="click-to-open-text pulse-text">Haz clic para abrir el sobre</p>
+    </div>
+
+    <!-- Fase 2: Rasgado -->
+    <div *ngIf="state() === 'tearing'" class="tearing-container">
+      <div class="booster-pack tearing-animation">
+         <div class="white-flash"></div>
+      </div>
+    </div>
+
+    <!-- Fase 3 y 4: Cartas en la mesa -->
+    <div *ngIf="state() === 'cards_down' || state() === 'revealed'" class="cards-table">
+      <div class="cards-grid">
+        <div *ngFor="let card of cards(); let i = index" 
+             class="gacha-card-wrapper"
+             [style.animation-delay]="i * 0.15 + 's'"
+             [class.card-dropped]="true">
+          
+          <div class="card-3d-container" 
+               [class.flipped]="card.isFlipped" 
+               (click)="flipCard(i)">
+            
+            <!-- Reverso de la carta -->
+            <div class="card-face card-back cyber-card-back">
+              <div class="card-back-logo">TCG</div>
+            </div>
+
+            <!-- Frente de la carta -->
+            <div class="card-face card-front" [ngClass]="'rarity-' + card.rarity">
+              <div class="holographic-overlay" *ngIf="card.rarity === 'legendary' || card.rarity === 'epic' || card.rarity === 'ultra-rare'"></div>
+              
+              <div class="card-header">
+                <span class="card-name">{{ card.name }}</span>
+                <span class="card-cost" *ngIf="card.type === 'pokemon' || card.type === 'trainer'">⚡ {{ card.cost }}</span>
+              </div>
+              
+              <div class="card-image-box">
+                <img [src]="card.image_url" [alt]="card.name" class="card-img" />
+              </div>
+
+              <div class="card-stats" *ngIf="card.type === 'pokemon'">
+                <span class="stat hp">❤️ {{ card.hp }}</span>
+                <span class="stat atk">⚔️ {{ card.attack }}</span>
+                <span class="stat def">🛡️ {{ card.defense }}</span>
+              </div>
+
+              <div class="card-desc" *ngIf="card.type !== 'pokemon'">
+                {{ card.description }}
+              </div>
+              
+              <!-- Rarity Badge -->
+              <div class="rarity-badge">{{ card.rarity | uppercase }}</div>
+            </div>
+            
+          </div>
+
+          <!-- Particles for Legendary/Epic -->
+          <div class="particles-container" *ngIf="card.isFlipped && (card.rarity === 'legendary' || card.rarity === 'epic' || card.rarity === 'ultra-rare')">
+            <div class="particle p1"></div>
+            <div class="particle p2"></div>
+            <div class="particle p3"></div>
+            <div class="particle p4"></div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="state() === 'revealed'" class="revealed-actions animate-fade-in" style="margin-top: 40px; text-align: center;">
+        <h2 class="text-neon-cyan">¡Cartas añadidas a tu colección!</h2>
+        <button class="btn btn-primary" style="margin-top: 20px; font-size: 1.2rem; padding: 15px 30px;" (click)="close()">
+          VOLVER AL LOBBY
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,644 @@
+<div class="dashboard-container container animate-slide-up">
+  
+  @if (auth.profile(); as trainer) {
+    <div class="lobby-layout">
+      
+      <!-- SIDEBAR (COLUMNA IZQUIERDA) -->
+      <aside class="lobby-sidebar glass-panel">
+        
+        <!-- PARTE SUPERIOR: scrollable -->
+        <div class="sidebar-scrollable">
+          <!-- Ficha Entrenador -->
+          <div class="sidebar-trainer-profile">
+            <div class="sidebar-avatar-container">
+              <img [src]="trainer.avatar_url" [alt]="trainer.username" 
+                class="sidebar-avatar"
+                onerror="this.src='/assets/avatars/avatar_default.png'">
+            </div>
+            <div class="sidebar-trainer-info">
+              <h3 class="sidebar-username">{{ trainer.username }}</h3>
+              <span class="sidebar-level-badge">Lvl {{ trainer.level }}</span>
+            </div>
+            <div class="sidebar-xp-wrapper">
+              <div class="sidebar-xp-bar-container">
+                <div class="sidebar-xp-bar-fill" [style.width.%]="xpPercentage()"></div>
+              </div>
+              <div class="sidebar-xp-text">
+                <span>XP: {{ trainer.xp }} / {{ xpNeeded() }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sidebar-divider"></div>
+
+          <!-- Navegación -->
+          <nav class="sidebar-nav">
+            <button type="button" class="sidebar-tab-btn tab-btn-cyan"
+              [class.active]="activeTab() === 'battle'" (click)="selectTab('battle')">
+              <span class="tab-icon">⚔️</span><span class="tab-text">CPU Arena</span>
+            </button>
+            <button type="button" class="sidebar-tab-btn tab-btn-magenta"
+              [class.active]="activeTab() === 'online'" (click)="selectTab('online')">
+              <span class="tab-icon">🌐</span><span class="tab-text">Duelo PvP</span>
+            </button>
+            <button type="button" class="sidebar-tab-btn tab-btn-cyan"
+              [class.active]="activeTab() === 'missions'" (click)="selectTab('missions')">
+              <span class="tab-icon">🛡️</span><span class="tab-text">Misiones</span>
+            </button>
+            <button type="button" class="sidebar-tab-btn tab-btn-magenta"
+              [class.active]="activeTab() === 'shop'" (click)="selectTab('shop')">
+              <span class="tab-icon">🛍️</span><span class="tab-text">Tienda Gacha</span>
+            </button>
+            <button type="button" class="sidebar-tab-btn tab-btn-purple"
+              [class.active]="activeTab() === 'profile'" (click)="selectTab('profile')">
+              <span class="tab-icon">📊</span><span class="tab-text">Ficha Técnica</span>
+            </button>
+            <button type="button" class="sidebar-tab-btn tab-btn-yellow"
+              [class.active]="activeTab() === 'help'" (click)="selectTab('help')">
+              <span class="tab-icon">🎓</span><span class="tab-text">Ayuda / Manual</span>
+            </button>
+
+            <div class="sidebar-divider"></div>
+
+            <div class="sidebar-shortcuts">
+              <button type="button" class="btn btn-cyan shortcut-btn"
+                style="padding: 10px; font-size: 0.75rem; width: 100%; text-align: left; display: flex; align-items: center; gap: 8px;"
+                (click)="navigateTo('/collection')">
+                <span>🗂️</span><span>Mi Colección</span>
+              </button>
+              <button type="button" class="btn btn-purple shortcut-btn"
+                style="padding: 10px; font-size: 0.75rem; width: 100%; text-align: left; display: flex; align-items: center; gap: 8px;"
+                (click)="navigateTo('/deck-builder')">
+                <span>🔧</span><span>Diseñar Mazo</span>
+              </button>
+            </div>
+          </nav>
+        </div>
+
+        <!-- PARTE INFERIOR: SIEMPRE VISIBLE -->
+        <div class="sidebar-footer">
+          <div class="settings-panel">
+            <div class="settings-title text-retro">⚙ CONFIGURACIÓN</div>
+            <div class="settings-row">
+              <button type="button" class="mute-btn"
+                (click)="audio.playClick(); audio.toggleMute()"
+                [title]="audio.isMuted() ? 'Activar sonido' : 'Silenciar'">
+                {{ audio.isMuted() ? '🔇' : '🔊' }}
+              </button>
+              <input type="range" min="0" max="1" step="0.05"
+                class="volume-slider"
+                [value]="audio.volume()"
+                (input)="onVolumeChange($event)"
+                title="Volumen">
+            </div>
+            <div class="settings-actions-grid">
+              <button type="button" class="settings-action-btn text-retro"
+                (click)="audio.playClick(); theme.toggleTheme()">
+                {{ theme.isLightTheme() ? '🌙 OSCURO' : '☀️ CLARO' }}
+              </button>
+              <button type="button" class="settings-action-btn text-retro"
+                (click)="audio.playClick(); toggleFullscreen()">
+                {{ isFullscreen() ? '🗗 VENTANA' : '🖥️ FULL' }}
+              </button>
+            </div>
+          </div>
+          <button type="button" class="btn-logout text-retro" (click)="logout()">
+            🚪 SALIR
+          </button>
+        </div>
+      </aside>
+
+      <!-- MAIN LOBBY CONTENT (COLUMNA DERECHA) -->
+      <main class="lobby-content">
+        
+        <!-- PESTAÑA: CPU ARENA -->
+        @if (activeTab() === 'battle') {
+          <div class="tab-panel glass-panel glowing-cyan animate-slide-up">
+            <div class="panel-header">
+              <h2 class="text-neon-cyan">⚔️ ARENA DE DUELOS VS CPU</h2>
+              <p class="panel-subtitle">Entrena tu mazo contra simuladores de Inteligencia Artificial para ganar reputación de red (XP) y cripto-créditos (Monedas).</p>
+            </div>
+
+            <div class="panel-body text-center">
+              <div class="difficulty-section" style="margin: 30px 0;">
+                <h3 class="difficulty-title text-retro" style="font-size: 0.8rem; margin-bottom: 20px; color: var(--color-text-muted);">
+                  Selecciona la dificultad de la IA
+                </h3>
+                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                  <button 
+                    type="button" 
+                    class="diff-btn rookie" 
+                    [class.active]="selectedDifficulty() === 'rookie'"
+                    (click)="selectDifficulty('rookie')">
+                    Rookie (Fácil)
+                  </button>
+                  <button 
+                    type="button" 
+                    class="diff-btn rival" 
+                    [class.active]="selectedDifficulty() === 'rival'"
+                    (click)="selectDifficulty('rival')">
+                    Rival (Medio)
+                  </button>
+                  <button 
+                    type="button" 
+                    class="diff-btn master" 
+                    [class.active]="selectedDifficulty() === 'master'"
+                    (click)="selectDifficulty('master')">
+                    Master (Difícil)
+                  </button>
+                </div>
+              </div>
+
+              <!-- Botón Gigante de Duelo -->
+              <div style="margin: 40px 0 20px;">
+                <button 
+                  type="button" 
+                  class="btn btn-primary" 
+                  style="padding: 20px 50px; font-size: 1.25rem; width: 100%; max-width: 500px; box-shadow: 0 0 25px rgba(0, 240, 255, 0.35); text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);"
+                  (click)="startBattle()">
+                  ⚡ INICIAR COMBATE EN LA ARENA ⚡
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- PESTAÑA: MULTIJUGADOR ONLINE -->
+        @if (activeTab() === 'online') {
+          <div class="tab-panel glass-panel glowing-magenta animate-slide-up">
+            <div class="panel-header">
+              <h2 class="text-neon-magenta">🌐 ARENA MULTIJUGADOR</h2>
+              <p class="panel-subtitle">Desafía a otros entrenadores reales a lo largo de la red en duelos PvP en tiempo real.</p>
+            </div>
+
+            <div class="panel-body text-center" style="padding: 40px 20px;">
+              <div class="pvp-accent-box" style="background: rgba(255, 0, 127, 0.03); border: 1px dashed rgba(255, 0, 127, 0.2); border-radius: 12px; padding: 25px; max-width: 600px; margin: 0 auto 30px;">
+                <span style="font-size: 2.5rem; display: block; margin-bottom: 15px;">🚀</span>
+                <p style="font-size: 0.95rem; color: var(--color-text-main); font-weight: bold; margin-bottom: 8px;">Acceso al Matchmaking de Red</p>
+                <p style="font-size: 0.85rem; color: var(--color-text-muted); line-height: 1.5;">El emparejamiento te conectará con el primer entrenador disponible. Asegúrate de que tu mazo configurado cumpla con el mínimo de 10 cartas antes de proceder.</p>
+              </div>
+
+              <button 
+                type="button" 
+                class="btn btn-magenta text-retro" 
+                style="padding: 16px 40px; font-size: 1rem; width: 100%; max-width: 400px;" 
+                (click)="navigateTo('/multiplayer-lobby')">
+                BUSCAR OPONENTE REAL
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- PESTAÑA: MISIONES DIARIAS -->
+        @if (activeTab() === 'missions') {
+          <div class="tab-panel glass-panel glowing-cyan animate-slide-up">
+            <div class="panel-header">
+              <h2 class="text-neon-cyan">🛡️ MISIONES DIARIAS</h2>
+              <p class="panel-subtitle">Completa objetivos del sistema diariamente para acumular cripto-créditos y XP adicionales.</p>
+            </div>
+
+        <div class="panel-body" style="padding-top: 20px;">
+              <div class="missions-list">
+                @if (profileService.loadingMissions() && profileService.missions().length === 0) {
+                  <div style="text-align: center; color: var(--color-text-dim); padding: 30px 0;">
+                    <div style="font-size: 2rem; margin-bottom: 10px; animation: float 2s ease-in-out infinite;">⚙️</div>
+                    Actualizando protocolos de misión...
+                  </div>
+                } @else if (profileService.missions().length === 0 || profileService.missions().every(m => m.is_claimed)) {
+                  <div style="text-align: center; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; gap: 20px;">
+                    <div style="font-size: 3rem; animation: float 3s ease-in-out infinite;">🎯</div>
+                    <div>
+                      <p style="color: #fff; font-weight: 700; font-size: 1rem; margin-bottom: 8px;">
+                        {{ profileService.missions().length === 0 ? 'No tienes misiones activas' : '¡Has completado todas las misiones! 🏆' }}
+                      </p>
+                      <p style="color: var(--color-text-dim); font-size: 0.85rem;">
+                        Genera nuevas misiones para seguir ganando XP y monedas.
+                      </p>
+                    </div>
+                    <button 
+                      type="button"
+                      class="btn btn-cyan text-retro"
+                      style="padding: 14px 32px; font-size: 0.9rem;"
+                      (click)="regenerateMissions()">
+                      🔄 GENERAR NUEVAS MISIONES
+                    </button>
+                  </div>
+                } @else {
+                  @for (mission of profileService.missions(); track mission.id) {
+                    <div 
+                      class="mission-row" 
+                      [class.completed]="mission.is_completed && !mission.is_claimed"
+                      [class.claimed]="mission.is_claimed">
+                      
+                      <div class="mission-info">
+                        <div class="mission-title">{{ mission.title }}</div>
+                        <div class="mission-desc">{{ mission.description }}</div>
+                        
+                        @if (!mission.is_claimed) {
+                          <div class="mission-progress-bar">
+                            <div class="mission-fill" [style.width.%]="(mission.current_value / mission.target_value) * 100"></div>
+                          </div>
+                          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); margin-top: 2px;">
+                            <span>Progreso</span>
+                            <span>{{ mission.current_value }} / {{ mission.target_value }}</span>
+                          </div>
+                        } @else {
+                          <div style="color: var(--neon-green); font-size: 0.8rem; font-weight: 700;" class="text-retro">✓ COMPLETADA</div>
+                        }
+                      </div>
+
+                      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0;">
+                        <div class="mission-rewards">
+                          <span>+{{ mission.reward_xp }} XP</span>
+                          <span>+{{ mission.reward_coins }} 🪙</span>
+                        </div>
+
+                        @if (mission.is_completed && !mission.is_claimed) {
+                          <button type="button" class="btn btn-claim text-retro" (click)="claimReward(mission.id, $event)">Cobrar</button>
+                        }
+                      </div>
+
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+
+          </div>
+        }
+
+        <!-- PESTAÑA: TIENDA GACHA -->
+        @if (activeTab() === 'shop') {
+          <div class="tab-panel glass-panel glowing-magenta animate-slide-up">
+            <div class="panel-header">
+              <h2 class="text-neon-magenta">🛍️ TIENDA DE SOBRES GACHA</h2>
+              <p class="panel-subtitle">Adquiere paquetes de cartas aleatorias. Cada sobre contiene 5 cartas y garantiza el sistema de protección.</p>
+            </div>
+
+            <div class="panel-body" style="padding-top: 20px;">
+              <div class="shop-grid-layout">
+                
+                <!-- Compra de sobres -->
+                <div class="shop-buy-card" style="text-align: center; border-right: 1px solid rgba(255,255,255,0.05); padding-right: 30px;">
+                  <div style="font-size: 4rem; margin-bottom: 15px; animation: float 3s ease-in-out infinite;">🎁</div>
+                  <h3 style="font-size: 1.1rem; color: #fff; margin-bottom: 10px;">Sobre de Expansión Standard</h3>
+                  <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 25px; line-height: 1.5;">Probabilidades de obtención:<br>Común: 70% | Rara: 20% | Épica: 8% | Legendaria: 2%</p>
+                  
+                  <button 
+                    type="button" 
+                    class="btn btn-magenta" 
+                    style="padding: 16px 30px; font-size: 1rem; width: 100%; box-shadow: 0 0 20px rgba(255, 0, 127, 0.4);"
+                    (click)="openPackOpener()">
+                    ✨ ABRIR SOBRE (300 🪙) ✨
+                  </button>
+
+                  <div style="font-size: 0.75rem; color: var(--color-text-dim); margin-top: 20px; line-height: 1.4; border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 15px;">
+                    ℹ️ <strong>Pity System:</strong> Garantizado al menos una carta Épica o Legendaria cada 10 sobres abiertos sin obtenerlas.
+                  </div>
+                </div>
+
+                <!-- Últimas cartas obtenidas -->
+                <div class="shop-recent-section" style="padding-left: 20px;">
+                  <h3 class="text-retro" style="font-size: 0.75rem; margin-bottom: 15px; color: var(--neon-magenta);">
+                    Últimas Cartas Desbloqueadas
+                  </h3>
+                  
+                  <div class="recent-rewards-gallery">
+                    @if (recentRewards().length === 0) {
+                      <div style="font-size: 0.8rem; color: var(--color-text-dim); text-align: center; padding: 40px 0;">No has abierto sobres recientemente.</div>
+                    } @else {
+                      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 12px;">
+                        @for (reward of recentRewards(); track reward.id) {
+                          <div class="recent-mini-card" style="border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.15); aspect-ratio: 2.5/3.5; box-shadow: 0 4px 8px rgba(0,0,0,0.4);">
+                            <img [src]="reward.cards.image_url" [alt]="reward.cards.name" style="width: 100%; height: 100%; object-fit: cover;">
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- PESTAÑA: FICHA TÉCNICA (PERFIL / HISTORIAL) -->
+        @if (activeTab() === 'profile') {
+          <div class="tab-panel glass-panel glowing-purple animate-slide-up">
+            <div class="panel-header">
+              <h2 class="text-neon-purple">📊 FICHA TÉCNICA DEL ENTRENADOR</h2>
+              <p class="panel-subtitle">Resumen general de tu rendimiento de combate e historial de duelos de la sesión.</p>
+            </div>
+
+            <div class="panel-body" style="padding-top: 20px;">
+              <!-- Ficha Grid -->
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <div class="stat-val" style="color: var(--neon-yellow); text-shadow: var(--glow-yellow);">
+                    {{ trainer.coins }} 🪙
+                  </div>
+                  <div class="stat-label">Cripto-Créditos</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-val" style="color: var(--neon-cyan); text-shadow: var(--glow-cyan);">
+                    Lvl {{ trainer.level }}
+                  </div>
+                  <div class="stat-label">Nivel de Red</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-val" style="color: var(--neon-green); text-shadow: var(--glow-green);">
+                    {{ profileService.matches().length }}
+                  </div>
+                  <div class="stat-label">Partidas Totales</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-val" style="color: var(--neon-magenta); text-shadow: var(--glow-magenta);">
+                    {{ profileService.matches().filter(m => m.result === 'victory').length }}
+                  </div>
+                  <div class="stat-label">Victorias Confirmadas</div>
+                </div>
+              </div>
+
+              <!-- Historial de Duelos -->
+              <div style="margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 25px;">
+                <h3 style="font-size: 0.95rem; color: var(--neon-purple); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                  ⚔️ Historial Reciente de Combate
+                </h3>
+
+                <div class="match-history-list">
+                  @if (profileService.loadingMatches() && profileService.matches().length === 0) {
+                    <div style="text-align: center; color: var(--color-text-dim); padding: 20px 0;">Recuperando registros...</div>
+                  } @else if (profileService.matches().length === 0) {
+                    <div style="text-align: center; color: var(--color-text-dim); padding: 20px 0;">No has librado duelos aún.</div>
+                  } @else {
+                    @for (match of profileService.matches(); track match.id) {
+                      <div class="match-item">
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                          <span class="match-opponent">vs {{ match.opponent_name }}</span>
+                          <span style="font-size: 0.75rem; color: var(--color-text-dim);">
+                            {{ match.created_at | date:'dd/MM/yyyy HH:mm' }}
+                          </span>
+                        </div>
+                        
+                        <div style="text-align: right; display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
+                          <span 
+                            class="match-result-badge" 
+                            [class.victory]="match.result === 'victory'"
+                            [class.defeat]="match.result === 'defeat'">
+                            {{ match.result === 'victory' ? 'Victoria' : 'Derrota' }}
+                          </span>
+                          <span class="match-rewards">
+                            +{{ match.xp_gained }} XP | +{{ match.coins_gained }} 🪙
+                          </span>
+                        </div>
+                      </div>
+                    }
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- PESTAÑA: CENTRO DE ENTRENAMIENTO -->
+        @if (activeTab() === 'help') {
+          <div class="tab-panel glass-panel glowing-yellow animate-slide-up">
+            <div class="panel-header">
+              <h2 class="text-neon-yellow">🎓 CENTRO DE ENTRENAMIENTO</h2>
+              <p class="panel-subtitle">Acceso a guías tácticas de aprendizaje y documentación técnica.</p>
+            </div>
+
+            <div class="panel-body" style="padding: 30px 10px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                
+                <div class="help-action-card" style="background: rgba(251, 192, 45, 0.02); border: 1px solid rgba(251, 192, 45, 0.1); border-radius: 12px; padding: 24px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: space-between;">
+                  <div>
+                    <span style="font-size: 2.5rem; display: block; margin-bottom: 10px;">🎓</span>
+                    <h3 style="font-size: 1rem; color: #fff; margin-bottom: 10px;">Academia de Duelos</h3>
+                    <p style="font-size: 0.8rem; color: var(--color-text-muted); line-height: 1.5; margin-bottom: 20px;">
+                      Tutorial didáctico de 4 pasos sobre la anatomía de las cartas, el cálculo de las estadísticas de red, el uso de las energías elementales y la curva de costos.
+                    </p>
+                  </div>
+                  <button type="button" class="btn btn-yellow text-retro" style="width: 100%;" (click)="openTutorial()">
+                    ABRIR ACADEMIA
+                  </button>
+                </div>
+
+                <div class="help-action-card" style="background: rgba(46, 125, 50, 0.02); border: 1px solid rgba(46, 125, 50, 0.1); border-radius: 12px; padding: 24px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: space-between;">
+                  <div>
+                    <span style="font-size: 2.5rem; display: block; margin-bottom: 10px;">📖</span>
+                    <h3 style="font-size: 1rem; color: #fff; margin-bottom: 10px;">Reglamento Oficial</h3>
+                    <p style="font-size: 0.8rem; color: var(--color-text-muted); line-height: 1.5; margin-bottom: 20px;">
+                      Información técnica avanzada sobre las reglas de juego y detalles sobre el sistema de base de datos local SQLite para persistencia local del estado.
+                    </p>
+                  </div>
+                  <button type="button" class="btn btn-green text-retro" style="width: 100%;" (click)="navigateTo('/help')">
+                    VER REGLAMENTO
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        }
+
+      </main>
+
+    </div>
+  }
+</div>
+
+<!-- TUTORIAL MODAL OVERLAY -->
+@if (showTutorial()) {
+  <div class="tutorial-overlay" (click)="closeTutorial()">
+    <div class="tutorial-modal glass-panel glowing-cyan animate-scale-up" (click)="$event.stopPropagation()">
+      
+      <!-- Header -->
+      <div class="tutorial-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.5rem;">🎓</span>
+          <h2 style="margin: 0; font-size: 1.25rem; color: var(--neon-cyan);">Academia de Duelos</h2>
+        </div>
+        <button type="button" class="close-btn" (click)="closeTutorial()">&times;</button>
+      </div>
+
+      <!-- Steps Progress Bar -->
+      <div class="tutorial-progress-steps">
+        <div class="step-dot" [class.active]="tutorialStep() >= 1" [class.current]="tutorialStep() === 1">1</div>
+        <div class="step-line" [class.active]="tutorialStep() >= 2"></div>
+        <div class="step-dot" [class.active]="tutorialStep() >= 2" [class.current]="tutorialStep() === 2">2</div>
+        <div class="step-line" [class.active]="tutorialStep() >= 3"></div>
+        <div class="step-dot" [class.active]="tutorialStep() >= 3" [class.current]="tutorialStep() === 3">3</div>
+        <div class="step-line" [class.active]="tutorialStep() >= 4"></div>
+        <div class="step-dot" [class.active]="tutorialStep() >= 4" [class.current]="tutorialStep() === 4">4</div>
+      </div>
+
+      <!-- Step Content Area -->
+      <div class="tutorial-body">
+        
+        <!-- PASO 1: OBJETIVO DEL JUEGO -->
+        @if (tutorialStep() === 1) {
+          <div class="tutorial-step-content animate-slide-up">
+            <h3 class="step-title">Paso 1: ¿Cuál es el Objetivo del Juego?</h3>
+            <p class="step-intro">
+              ¡Te damos la bienvenida a la arena de combate! Este es un juego de cartas de estrategia cibernética donde compites contra la CPU u otros jugadores en línea.
+            </p>
+            
+            <div class="tutorial-diagram-card">
+              <div class="diagram-info">
+                <div class="diagram-stat-box">
+                  <span class="diagram-icon">❤️</span>
+                  <div class="diagram-details">
+                    <span class="diagram-num">4000 LP</span>
+                    <span class="diagram-label">Puntos de Vida Iniciales</span>
+                  </div>
+                </div>
+                <div class="diagram-stat-box">
+                  <span class="diagram-icon">🃏</span>
+                  <div class="diagram-details">
+                    <span class="diagram-num">5 Cartas</span>
+                    <span class="diagram-label">Mano Inicial al Robar</span>
+                  </div>
+                </div>
+              </div>
+              <div class="diagram-expl">
+                <p><strong>¿Cómo ganar?</strong> El objetivo primordial es reducir los Puntos de Vida (Life Points / LP) de tu rival a <strong>0</strong> antes de que él agote los tuyos.</p>
+                <p>Ambos jugadores inician con un mazo de cartas personalizado. En cada turno robarás nuevas opciones tácticas para tu mano.</p>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- PASO 2: ANATOMÍA DE UNA CARTA -->
+        @if (tutorialStep() === 2) {
+          <div class="tutorial-step-content animate-slide-up">
+            <h3 class="step-title">Paso 2: Anatomía y Tipos de Cartas</h3>
+            <p class="step-intro">
+              Cada carta representa a un Pokémon con atributos de combate únicos calculados a partir de sus estadísticas de red oficiales.
+            </p>
+
+            <div class="tutorial-card-demo-container">
+              <!-- Miniature holographic card mockup -->
+              <div class="mock-card">
+                <div class="mock-card-header">
+                  <span class="mock-card-name">Pikachu</span>
+                  <span class="mock-card-cost">⚡ 2</span>
+                </div>
+                <div class="mock-card-image-box">
+                  <div class="mock-card-img-placeholder">⚡</div>
+                </div>
+                <div class="mock-card-stats">
+                  <span class="stat hp">❤️ 120 HP</span>
+                  <span class="stat atk">⚔️ 60 ATK</span>
+                  <span class="stat def">🛡️ 40 DEF</span>
+                </div>
+              </div>
+
+              <!-- Description points -->
+              <div class="card-expl-list">
+                <div class="expl-item"><span class="badge yellow">⚡ Elemento</span> Determina ventajas de daño (Fuego, Agua, Planta, Eléctrico, etc.).</div>
+                <div class="expl-item"><span class="badge blue">⚡ Costo</span> Puntos de Energía que debes pagar para colocar la carta en tu Campo.</div>
+                <div class="expl-item"><span class="badge red">❤️ HP</span> Salud del Pokémon. Si llega a 0, la carta va al Cementerio (Descarte).</div>
+                <div class="expl-item"><span class="badge green">⚔️ ATK / 🛡️ DEF</span> Potencia de ataque y escudo protector usado en batallas.</div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- PASO 3: LAS FASES DEL TURNO Y ENERGÍA -->
+        @if (tutorialStep() === 3) {
+          <div class="tutorial-step-content animate-slide-up">
+            <h3 class="step-title">Paso 3: Fases del Turno y Combate</h3>
+            <p class="step-intro">
+              Los duelos se desarrollan en turnos ordenados por fases tácticas. Cada acción requiere planeación cuidadosa.
+            </p>
+
+            <div class="fases-grid">
+              <div class="fase-card">
+                <div class="fase-num">1</div>
+                <div class="fase-info">
+                  <h4>Fase de Robo</h4>
+                  <p>Al iniciar tu turno, robas automáticamente una carta de tu mazo a tu mano.</p>
+                </div>
+              </div>
+              <div class="fase-card">
+                <div class="fase-num">2</div>
+                <div class="fase-info">
+                  <h4>Fase Principal</h4>
+                  <p>Obtienes +1 de Energía. Invocas cartas al campo pagando su costo de energía.</p>
+                </div>
+              </div>
+              <div class="fase-card">
+                <div class="fase-num">3</div>
+                <div class="fase-info">
+                  <h4>Fase de Combate</h4>
+                  <p>Tus cartas del campo atacan al rival. Si no tiene cartas defensivas, dañas sus LP directamente.</p>
+                </div>
+              </div>
+              <div class="fase-card">
+                <div class="fase-num">4</div>
+                <div class="fase-info">
+                  <h4>Fase Final</h4>
+                  <p>Declaras el fin de tu turno y cedes la iniciativa al oponente para defenderte.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- PASO 4: CONSTRUCCIÓN DE MAZOS -->
+        @if (tutorialStep() === 4) {
+          <div class="tutorial-step-content animate-slide-up">
+            <h3 class="step-title">Paso 4: Construcción de Mazos y Reglas</h3>
+            <p class="step-intro">
+              Tus victorias dependerán de la sinergia y balance de tus cartas. El Deck Builder te permite programar tu mejor estrategia.
+            </p>
+
+            <div class="deck-rules-box">
+              <div class="rule-highlight">
+                <div class="rule-icon">⚠️</div>
+                <div class="rule-details">
+                  <h4>Límite de Cartas</h4>
+                  <p>Un mazo estándar requiere un número balanceado de cartas. Para garantizar juego justo, se permiten **máximo 3 copias** de la misma carta por mazo.</p>
+                </div>
+              </div>
+
+              <div class="rule-highlight">
+                <div class="rule-icon">📈</div>
+                <div class="rule-details">
+                  <h4>Estrategia de Curva de Costo</h4>
+                  <p>Combina Pokémon de costo bajo (1 o 2 de energía) para tu juego temprano, con poderosos atacantes legendarios (costo 4+) para el golpe final.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="tutorial-success-badge animate-pulse-cyan">
+              🎉 ¡Tu entrenamiento ha concluido! Estás listo para dominar la arena cibernética.
+            </div>
+          </div>
+        }
+
+      </div>
+
+      <!-- Footer Navigation -->
+      <div class="tutorial-footer">
+        <button type="button" class="btn btn-cyan" (click)="prevStep()" [disabled]="tutorialStep() === 1">
+          Anterior
+        </button>
+        
+        <span style="font-size: 0.85rem; color: var(--color-text-dim);">Paso {{ tutorialStep() }} de 4</span>
+
+        <button type="button" class="btn btn-primary" (click)="nextStep()">
+          {{ tutorialStep() === 4 ? 'Finalizar' : 'Siguiente' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- PACK OPENER MODAL OVERLAY -->
+@if (showPackOpener()) {
+  <app-pack-opener (closed)="closePackOpener()"></app-pack-opener>
+}

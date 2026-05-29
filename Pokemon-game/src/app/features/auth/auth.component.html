@@ -1,0 +1,133 @@
+<div class="auth-container">
+  <!-- Floating Theme Toggle -->
+  <button 
+    type="button" 
+    class="theme-toggle-btn glass-panel glowing-cyan animate-slide-up" 
+    style="position: absolute; top: 24px; right: 24px; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.25rem; z-index: 100;"
+    (click)="audio.playClick(); theme.toggleTheme()">
+    {{ theme.isLightTheme() ? '🌙' : '☀️' }}
+  </button>
+
+  <div class="auth-card glass-panel glowing-cyan animate-slide-up">
+    
+    <div class="auth-header">
+      <div class="auth-logo">CYBER-TCG</div>
+      <div class="auth-subtitle">Pokémon + Yu-Gi-Oh Arena</div>
+    </div>
+
+    <!-- Tabs Toggle -->
+    <div class="auth-tabs">
+      <button 
+        type="button" 
+        class="auth-tab" 
+        [class.active]="isLogin()" 
+        (click)="toggleMode(true)">
+        Ingresar
+      </button>
+      <button 
+        type="button" 
+        class="auth-tab" 
+        [class.active]="!isLogin()" 
+        (click)="toggleMode(false)">
+        Registrarse
+      </button>
+    </div>
+
+    <!-- Auth Form -->
+    <form (ngSubmit)="onSubmit()" #authForm="ngForm">
+      
+      <!-- Username (Only when Registering) -->
+      @if (!isLogin()) {
+        <div class="form-group animate-slide-up">
+          <label class="form-label" for="username">Nombre de Entrenador</label>
+          <input 
+            type="text" 
+            id="username" 
+            name="username"
+            class="form-input" 
+            placeholder="Ej. AshKetchum99" 
+            [(ngModel)]="username"
+            required
+            #userVal="ngModel">
+        </div>
+
+        <!-- Avatar Selection -->
+        <div class="form-group animate-slide-up">
+          <label class="form-label">Elige tu Avatar</label>
+          <div style="display: flex; gap: 12px; margin-top: 4px; justify-content: space-around;">
+            @for (av of avatars; track av.url) {
+              <div 
+                style="width: 50px; height: 50px; border-radius: 50%; overflow: hidden; border: 2px solid transparent; cursor: pointer; transition: all 0.2s;"
+                [style.border-color]="avatarUrl === av.url ? 'var(--neon-cyan)' : 'transparent'"
+                [style.box-shadow]="avatarUrl === av.url ? 'var(--glow-cyan)' : 'none'"
+                (click)="selectAvatar(av.url)">
+                <img 
+                  [src]="av.url" 
+                  [alt]="av.name" 
+                  style="width: 100%; height: 100%; object-fit: cover;"
+                  onerror="this.src='/assets/avatars/avatar_default.png'">
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Email Input -->
+      <div class="form-group">
+        <label class="form-label" for="email">Dirección de Red (Email)</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email"
+          class="form-input" 
+          placeholder="ejemplo@cyber.com" 
+          [(ngModel)]="email"
+          required
+          email
+          #emailVal="ngModel">
+      </div>
+
+      <!-- Password Input -->
+      <div class="form-group">
+        <label class="form-label" for="password">Código de Acceso (Password)</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password"
+          class="form-input" 
+          placeholder="••••••••" 
+          [(ngModel)]="password"
+          required
+          minlength="6"
+          #passVal="ngModel">
+      </div>
+
+      <!-- Action Button -->
+      <button 
+        type="submit" 
+        class="btn btn-primary" 
+        style="width: 100%; margin-top: 12px;"
+        [disabled]="!authForm.form.valid || (authService.loading())">
+        
+        @if (authService.loading()) {
+          <span class="spinner"></span>
+        } @else {
+          {{ isLogin() ? 'Iniciar Duelo' : 'Crear Perfil' }}
+        }
+      </button>
+
+    </form>
+
+    <!-- Footer Toggle Message -->
+    <div class="auth-footer">
+      @if (isLogin()) {
+        ¿Eres nuevo en la red? 
+        <span class="auth-toggle-link" (click)="toggleMode(false)">Regístrate aquí</span>
+      } @else {
+        ¿Ya tienes un perfil activo? 
+        <span class="auth-toggle-link" (click)="toggleMode(true)">Inicia sesión</span>
+      }
+    </div>
+
+  </div>
+</div>

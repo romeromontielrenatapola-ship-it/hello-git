@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Cyber Pokémon TCG – Duelos en Línea</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Juego de cartas coleccionables estilo Pokémon TCG. Combate contra la CPU, duelos PvP en línea, y construye tu mazo perfecto." />
+    <meta name="theme-color" content="#0a0f1e" />
+    <!-- PWA: Reemplazo moderno de apple-mobile-web-app-capable -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="CyberTCG" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="manifest" href="manifest.webmanifest" />
+  </head>
+  <body>
+    <app-root></app-root>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker
+            .register('/sw.js')
+            .then((reg) =>
+              console.log('Service Worker registrado con éxito en alcance:', reg.scope),
+            )
+            .catch((err) => console.error('Error al registrar Service Worker:', err));
+        });
+      }
+    </script>
+    <noscript>Please enable JavaScript to continue using this application.</noscript>
+  </body>
+</html>
